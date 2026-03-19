@@ -1,0 +1,121 @@
+---
+title: Translation Workflow
+description: How translations flow from source content to production — Crowdin integration, GitHub Actions sync, and which sections of the site are translated and why.
+---
+
+Translation of the Node.js website is managed through [Crowdin](https://crowdin.com/project/nodejs-web). The workflow is largely automated via GitHub Actions.
+
+## How Translations Sync
+
+<Steps>
+  <Step title="Content is authored in English">
+    All new content is created in `apps/site/pages/en/`. UI strings are added to `packages/i18n/locales/en.json`.
+  </Step>
+  <Step title="Push to main uploads source content">
+    On every push to the `main` branch, a GitHub Actions workflow uploads any new English source content to Crowdin. This notifies translators that new strings are available.
+  </Step>
+  <Step title="Translators work in Crowdin">
+    Community translators join the [Crowdin project](https://crowdin.com/project/nodejs-web) and translate strings using the Crowdin online editor.
+  </Step>
+  <Step title="Cron job downloads completed translations">
+    On a scheduled cron, and manually when triggered by a collaborator, a GitHub Actions workflow downloads completed translations from Crowdin into the repository.
+  </Step>
+  <Step title="Translations are linted and formatted">
+    Incoming translations are linted to confirm they originate from Crowdin and are formatted to match project settings before being committed.
+  </Step>
+</Steps>
+
+## How to Contribute Translations
+
+1. Request to join the project at [crowdin.com/project/nodejs-web](https://crowdin.com/project/nodejs-web)
+2. Select the language you want to translate
+3. Use the Crowdin online editor to translate strings
+
+For questions or feedback on existing translations, start a [Crowdin discussion](https://crowdin.com/project/nodejs-web/discussions) or open a conversation with other translators.
+
+## Adding Translation Keys
+
+When building a new component that needs translated strings:
+
+<Steps>
+  <Step title="Add keys to en.json only">
+    Add new keys to `packages/i18n/locales/en.json`. Do not add them to other locale files — Crowdin handles syncing.
+  </Step>
+  <Step title="Place keys at the bottom">
+    New keys should be appended to the bottom of `en.json` so translators can easily spot that new strings need attention.
+  </Step>
+  <Step title="Follow the naming convention">
+    Keys are nested JSON matching the component's canonical path. For a component at `components/Common/MyComponent`:
+
+    ```json
+    {
+      "components": {
+        "common": {
+          "myComponent": {
+            "copyButton": {
+              "title": "Copy to clipboard"
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="Use full key paths in components">
+    Always reference the full key path when calling `useTranslations()`:
+
+    ```tsx
+    // Correct
+    const t = useTranslations();
+    t('components.common.myComponent.copyButton.title');
+
+    // Incorrect — partial prefix breaks static analysis
+    const t = useTranslations('components.common.myComponent');
+    t('copyButton.title');
+    ```
+  </Step>
+</Steps>
+
+## Which Sections Are Translated
+
+Not all sections of the website are translated. The decision depends on the nature of the content and the team's capacity to ensure translation quality.
+
+### Translated Sections
+
+<CardGroup cols={2}>
+  <Card title="Home Page">
+    Translated because it is the first page visitors see. It is critical that everyone understands what Node.js is and what it can do.
+  </Card>
+  <Card title="About">
+    Translated because it contains information about the Node.js project and its governance. The content uses relatively few technical terms.
+  </Card>
+  <Card title="Download">
+    Translated because knowing how to download Node.js is essential for all users, regardless of language.
+  </Card>
+</CardGroup>
+
+### Sections Not Translated
+
+<CardGroup cols={2}>
+  <Card title="Learn">
+    Not translated per TSC consensus. The Learn section contains many technical terms that are difficult to translate accurately. Maintainers do not have the bandwidth to ensure quality, and it is considered better to have accurate English content than poor translations.
+  </Card>
+  <Card title="Blog">
+    Not translated because most blog posts are release notes, and translating them would not provide meaningful value to users.
+  </Card>
+  <Card title="Docs (API)">
+    The API documentation is too expansive and too frequently versioned to translate and maintain.
+  </Card>
+</CardGroup>
+
+<Note>
+  For more background on the Learn section decision, see [this GitHub comment](https://github.com/nodejs/nodejs.org/issues/6429#issuecomment-2558265376).
+</Note>
+
+## Testing with Translations
+
+Unit tests should not translate strings. If a component uses `useTranslations`, wrap the test render with `<NextIntlProvider>` but do not import the real English messages file.
+
+- Test component behavior, not text content
+- Use `aria-*` attributes, class names, or other non-text selectors
+- Visual Regression Testing (via Chromatic) is the appropriate tool for verifying how different languages look in a component

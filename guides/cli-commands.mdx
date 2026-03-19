@@ -1,0 +1,167 @@
+---
+title: CLI Commands
+description: Complete reference for all available CLI commands in the nodejs.org repository, organized by purpose.
+---
+
+The repository uses [pnpm](https://pnpm.io/) as its package manager and [Turborepo](https://turbo.build/repo) to orchestrate tasks across the monorepo. Most commands are run from the repository root; some are also available scoped to individual workspaces.
+
+<Note>
+  Node.js 24.x and pnpm 10.28.2 are required. See the `devEngines` field in the root `package.json` for authoritative version requirements.
+</Note>
+
+## Development
+
+<Tabs>
+  <Tab title="Root workspace">
+    | Command | Description |
+    |---|---|
+    | `pnpm dev` | Start the Next.js development server with hot reload |
+    | `pnpm build` | Production build for all packages and the site |
+    | `pnpm deploy` | Static-export build (`NEXT_PUBLIC_STATIC_EXPORT=true`) |
+    | `pnpm start` | Start the production Next.js server after `build` |
+  </Tab>
+  <Tab title="apps/site">
+    | Command | Description |
+    |---|---|
+    | `pnpm dev` | `next dev` — development server |
+    | `pnpm build` | `next build` — production build (also runs `build:blog-data` first) |
+    | `pnpm build:blog-data` | Pre-computes blog metadata used by the RSS feeds and listing pages |
+    | `pnpm build:blog-data:watch` | Re-runs blog data compilation on file changes |
+    | `pnpm deploy` | Static export build |
+    | `pnpm start` | `next start` — serve the production build |
+  </Tab>
+</Tabs>
+
+```bash
+# Start the development server
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Start the production server
+pnpm start
+```
+
+## Code quality
+
+### Linting
+
+| Command | Description |
+|---|---|
+| `pnpm lint` | Run all linters (JS/TS, CSS, Markdown) |
+| `pnpm lint:fix` | Run all linters with auto-fix enabled |
+
+The `lint` command is a composite that runs three sub-linters in sequence:
+
+| Sub-command | Tool | Targets |
+|---|---|---|
+| `lint:js` | ESLint | `**/*.{js,mjs,ts,tsx}` |
+| `lint:css` | Stylelint | `**/*.css` |
+| `lint:md` | ESLint + `eslint-plugin-mdx` | `**/*.md?(x)` |
+
+Each has a corresponding `:fix` variant that passes `--fix` to the underlying tool.
+
+### Formatting
+
+| Command | Description |
+|---|---|
+| `pnpm prettier` | Check formatting with Prettier (no changes written) |
+| `pnpm prettier:fix` | Apply Prettier formatting |
+| `pnpm format` | Alias that runs `prettier:fix` and all `lint:fix` tasks together |
+
+```bash
+# Check formatting without making changes
+pnpm prettier
+
+# Apply Prettier formatting
+pnpm prettier:fix
+
+# Run all fixers at once
+pnpm format
+```
+
+### Type checking
+
+```bash
+pnpm lint:types
+```
+
+Runs `tsc --noEmit` across all TypeScript workspaces.
+
+## Testing
+
+| Command | Description |
+|---|---|
+| `pnpm test` | Run all unit tests |
+| `pnpm test:unit` | Alias for `pnpm test` |
+| `pnpm test:ci` | Run unit tests with CI reporters (lcov, JUnit, GitHub annotations) |
+
+```bash
+# Run all unit tests
+pnpm test
+
+# Run tests with CI output formats
+pnpm test:ci
+```
+
+The `test:ci` command sets `NODE_OPTIONS` to enable three reporters simultaneously:
+
+```bash
+NODE_OPTIONS="\
+  --test-reporter=lcov --test-reporter-destination=lcov.info \
+  --test-reporter=junit --test-reporter-destination=junit.xml \
+  --test-reporter=@reporters/github --test-reporter-destination=stdout"
+```
+
+For Playwright end-to-end tests, run directly from `apps/site`:
+
+```bash
+pnpm --filter @node-core/website playwright
+```
+
+## Storybook
+
+| Command | Description |
+|---|---|
+| `pnpm storybook` | Start the Storybook development server |
+| `pnpm storybook:build` | Build a static Storybook for deployment |
+
+```bash
+# Start Storybook
+pnpm storybook
+
+# Build static Storybook
+pnpm storybook:build
+```
+
+## Scripts
+
+### Release post generator
+
+```bash
+pnpm scripts:release-post -- --version=vXX.X.X
+```
+
+Generates a release blog post at `apps/site/pages/en/blog/release/vX.Y.Z.md` by fetching data from the Node.js dist server and GitHub changelog. Pass `--force` to overwrite an existing file:
+
+```bash
+pnpm scripts:release-post -- --version=v24.0.0 --force
+```
+
+See [Writing Blog Posts](/guides/writing-blog-posts) for full usage details.
+
+### Cloudflare deployment
+
+| Command | Description |
+|---|---|
+| `pnpm cloudflare:deploy` | Build and deploy to Cloudflare Workers |
+| `pnpm cloudflare:preview` | Local preview with `wrangler dev` |
+
+## Compilation
+
+```bash
+pnpm compile
+```
+
+Runs the `compile` Turborepo task across all packages. Used to compile TypeScript packages (e.g. `@node-core/ui-components`) before publishing.

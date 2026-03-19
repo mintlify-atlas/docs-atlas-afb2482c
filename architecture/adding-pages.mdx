@@ -1,0 +1,222 @@
+---
+title: Adding Pages
+description: Step-by-step guide to creating new content pages on the nodejs.org website — file creation, frontmatter configuration, layout selection, and navigation updates.
+---
+
+This guide walks through creating a new page and publishing it on the Node.js website.
+
+## Quick Reference
+
+<Steps>
+  <Step title="Create the content file">
+    Add a new `.md` or `.mdx` file in `apps/site/pages/en/` under the appropriate subdirectory.
+  </Step>
+  <Step title="Configure frontmatter">
+    Add the required YAML frontmatter block at the top of the file.
+  </Step>
+  <Step title="Choose a layout">
+    Set the `layout` frontmatter field to one of the available layouts in `apps/site/layouts/`.
+  </Step>
+  <Step title="Update navigation (if needed)">
+    If the page should appear in the sidebar, update `apps/site/navigation.json`.
+  </Step>
+  <Step title="Preview locally">
+    Run `pnpm dev` and navigate to the new page URL.
+  </Step>
+</Steps>
+
+## 1. Create the Content File
+
+Create a new Markdown file in `apps/site/pages/en/` with the appropriate subdirectory structure.
+
+```markdown
+---
+title: Title of the Page
+layout: layout-name
+---
+
+# Page Title
+
+Your content goes here...
+```
+
+### Learn Page Structure
+
+Learn pages follow a category/article hierarchy:
+
+```
+apps/site/pages/en/learn/
+├── getting-started/
+│   ├── introduction-to-nodejs.md
+│   └── debugging.md
+└── my-new-category/
+    └── my-new-article.md
+```
+
+## 2. Configure the Frontmatter
+
+The YAML frontmatter at the top of the file controls page metadata:
+
+```md
+---
+title: About Node.js
+layout: about
+description: Learn about the Node.js runtime and its ecosystem
+authors: nodejs-team, community-contributor
+canonical: https://original-source.example.com/the-article
+---
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `title` | Yes | Browser tab title and SEO `<title>` tag |
+| `layout` | Yes | Layout template name (see available layouts below) |
+| `description` | No | SEO meta description |
+| `authors` | No | GitHub usernames for learn articles; shown in the meta bar |
+| `canonical` | No | Original URL for syndicated content |
+
+## 3. Choose the Appropriate Layout
+
+Available layouts are defined in `apps/site/layouts/` and mapped in `apps/site/components/withLayout.tsx`.
+
+| Layout name | File | Best for |
+|---|---|---|
+| `about` | `About.tsx` | About section pages with sidebar navigation |
+| `article-page` | `ArticlePage.tsx` | Standalone article pages with meta bar |
+| `blog` | `Blog.tsx` | Blog index and category listing pages |
+| `default` | `Default.tsx` | Generic pages with no sidebar |
+| `download` | `Download.tsx` | Download pages with release data integration |
+| `download-archive` | `DownloadArchive.tsx` | Download archive listing |
+| `glowing-backdrop` | `GlowingBackdrop.tsx` | Landing/feature pages with visual treatment |
+| `learn` | `Learn.tsx` | Learn section articles with sidebar and cross-links |
+| `post` | `Post.tsx` | Individual blog posts with author and category |
+
+## 4. Update Navigation
+
+### Top Navigation
+
+The `topNavigation` key in `apps/site/navigation.json` controls the main navbar links:
+
+```json
+{
+  "topNavigation": {
+    "learn": {
+      "link": "/learn",
+      "label": "components.containers.navBar.links.learn"
+    }
+  }
+}
+```
+
+### Side Navigation (Learn)
+
+To add a Learn article to the sidebar, add an entry to the `sideNavigation.learn.items` object in `navigation.json`:
+
+```json
+{
+  "sideNavigation": {
+    "learn": {
+      "items": {
+        "myNewCategory": {
+          "label": "components.navigation.learn.myNewCategory.links.myNewCategory",
+          "items": {
+            "myNewArticle": {
+              "link": "/learn/my-new-category/my-new-article",
+              "label": "components.navigation.learn.myNewCategory.links.myNewArticle"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Add Translation Keys
+
+Navigation labels are translation keys, not raw strings. Add the corresponding key/value pair to `packages/i18n/locales/en.json`:
+
+```json
+{
+  "components": {
+    "navigation": {
+      "learn": {
+        "myNewCategory": {
+          "links": {
+            "myNewCategory": "My New Category",
+            "myNewArticle": "My New Article Title"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+<Note>
+  Only add new translation keys to `packages/i18n/locales/en.json`. Crowdin automatically syncs new keys to translators. New keys should be added at the bottom of the file so translators can spot them easily.
+</Note>
+
+## Page Type Examples
+
+<Tabs>
+  <Tab title="Standard Content Page">
+    ```markdown
+    ---
+    title: About Node.js
+    layout: about
+    description: Learn about the Node.js runtime and its ecosystem
+    ---
+
+    # About Node.js
+
+    Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine...
+    ```
+  </Tab>
+  <Tab title="Blog Post">
+    ```markdown
+    ---
+    title: Node.js 20.0.0 Released
+    layout: post
+    date: 2023-04-18
+    author: Node.js Team
+    ---
+
+    # Node.js 20.0.0 Now Available
+
+    We're excited to announce the release of Node.js 20.0.0...
+    ```
+  </Tab>
+  <Tab title="Learn Article">
+    ```markdown
+    ---
+    title: Getting Started with Node.js
+    layout: learn
+    authors: nodejs-team, community-contributor
+    ---
+
+    # Getting Started with Node.js
+
+    This tutorial will guide you through...
+    ```
+  </Tab>
+</Tabs>
+
+## Validation and Testing
+
+Before opening a pull request:
+
+1. **Preview locally**: Run `pnpm dev` and navigate to your page
+2. **Check formatting**: Run `pnpm format` to ensure consistent formatting
+3. **Validate links**: Confirm all internal links resolve correctly
+4. **Test responsiveness**: Check the layout on different screen sizes
+
+## Dynamic Content Pages
+
+For pages that need build-time data (e.g., release listings):
+
+1. Add a data provider in `apps/site/next-data/`
+2. Configure the data source in the appropriate script
+3. Access data through layout props or React context
+
+See `apps/site/next-data/providers/releaseData.ts` for a real example used by the Download layout.

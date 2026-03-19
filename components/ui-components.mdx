@@ -1,0 +1,161 @@
+---
+title: UI components
+description: Reference for the @node-core/ui-components package — a framework-agnostic React component library published to npm and used by the Node.js website.
+---
+
+`@node-core/ui-components` is the shared component library for the Node.js website. It is published to npm and designed to be framework-agnostic — no Next.js imports, no routing dependencies.
+
+**Current version:** `1.6.3`
+
+## Installing
+
+```bash
+npm install @node-core/ui-components
+```
+
+Within the monorepo, the site app references it as a workspace package:
+
+```json
+{
+  "dependencies": {
+    "@node-core/ui-components": "workspace:*"
+  }
+}
+```
+
+## Importing components
+
+Import directly from the component's path within the package:
+
+```tsx
+import Button from '@node-core/ui-components/Common/BaseButton';
+import NavBar from '@node-core/ui-components/Containers/NavBar';
+import GitHubIcon from '@node-core/ui-components/Icons/Social/GitHub';
+```
+
+The package `exports` field supports both the compiled `dist/` output and the raw `src/` TypeScript sources:
+
+```json
+{
+  "exports": {
+    "./*": {
+      "rolldown": [
+        "./dist/*",
+        "./dist/*.js",
+        "./dist/*/index.js"
+      ],
+      "default": [
+        "./src/*",
+        "./src/*.tsx",
+        "./src/*/index.tsx",
+        "./src/*.ts",
+        "./src/*/index.ts"
+      ]
+    }
+  }
+}
+```
+
+## Package structure
+
+The `src/` directory is organized into five top-level namespaces:
+
+### Common
+
+General-purpose UI components used throughout the site:
+
+| Component | Description |
+|---|---|
+| `AlertBox` | Inline alert messages |
+| `AvatarGroup` | Group of user avatars |
+| `Badge` | Small label indicator |
+| `BadgeGroup` | Badge with surrounding text |
+| `Banner` | Site-wide announcement strip |
+| `BaseActiveLink` | Anchor with active-state styling |
+| `BaseButton` | Foundation button element |
+| `BaseCodeBox` | Code display container |
+| `BaseCrossLink` | Cross-link navigation element |
+| `BaseLinkTabs` | Tab navigation using links |
+| `BasePagination` | Pagination controls |
+| `Blockquote` | Styled blockquote element |
+| `Breadcrumbs` | Breadcrumb trail |
+| `ChangeHistory` | Changelog / history display |
+| `CodeTabs` | Tabbed code block viewer |
+| `DataTag` | Metadata tag label |
+| `GlowingBackdrop` | Decorative glow effect |
+| `LanguageDropDown` | Locale switcher dropdown |
+| `Modal` | Dialog / modal overlay |
+| `NodejsLogo` | Node.js wordmark |
+| `Preview` | Content preview wrapper |
+| `Search` | Search input component |
+| `Select` | Dropdown select input |
+| `Separator` | Horizontal rule / divider |
+| `Signature` | Code signature display |
+| `Skeleton` | Loading skeleton placeholder |
+| `SkipToContentButton` | Accessibility skip link |
+| `Switch` | Toggle switch |
+| `TableOfContents` | Page TOC navigation |
+| `Tabs` | Content tab switcher |
+| `ThemeToggle` | Light / dark / system toggle |
+| `Tooltip` | Hover tooltip |
+
+### Containers
+
+Higher-level layout components that compose multiple Common components:
+
+| Component | Description |
+|---|---|
+| `Article` | Article content wrapper |
+| `Footer` | Site footer with navigation and badges |
+| `FunctionSignature` | API function signature display |
+| `MetaBar` | Page metadata bar |
+| `NavBar` | Primary navigation bar |
+| `Sidebar` | Sidebar navigation |
+
+### Icons
+
+SVG icon sets, organized by category:
+
+- `Icons/InstallationMethod/` — package manager installation icons
+- `Icons/Logos/` — third-party brand logos
+- `Icons/OperatingSystem/` — OS icons (Windows, macOS, Linux)
+- `Icons/PackageManager/` — npm, pnpm, yarn, etc.
+- `Icons/PartnerLogos/` — partner and sponsor logos
+- `Icons/Social/` — social platform icons (GitHub, Twitter, etc.)
+
+### MDX
+
+Utility components for use inside MDX content:
+
+| Component | Description |
+|---|---|
+| `MDX/CodeTabs` | Tabbed code blocks in MDX |
+| `MDX/Tooltip` | Inline tooltips in MDX |
+
+### hooks
+
+Shared React hooks:
+
+| Hook | Description |
+|---|---|
+| `hooks/useCopy` | Copy-to-clipboard with state management |
+
+## Key dependencies
+
+The package uses these runtime dependencies:
+
+- `@radix-ui/*` — accessible primitives (dialog, dropdown, select, tabs, tooltip, etc.)
+- `@heroicons/react` — SVG icon set
+- `@orama/core` and `@orama/ui` — search engine
+- `tailwindcss` — utility-first CSS (via PostCSS)
+- `classnames` — conditional class name utility
+
+## Storybook
+
+All components in this package have Storybook stories. Run the development server:
+
+```bash
+pnpm storybook
+```
+
+This starts Storybook at `http://localhost:6006`. See [Storybook](/components/storybook) for full details.

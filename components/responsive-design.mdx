@@ -1,0 +1,169 @@
+---
+title: Responsive design
+description: Responsive breakpoints, mobile-first layout patterns, and grid and typography scaling using Tailwind CSS utilities inside CSS Modules.
+---
+
+The Node.js website is built mobile-first. Base styles apply to the smallest screens; breakpoint prefixes layer on styles for larger viewports.
+
+## Breakpoints
+
+The project uses Tailwind's default breakpoints:
+
+| Prefix | Minimum width | Typical target |
+|---|---|---|
+| *(none)* | 0px | Mobile |
+| `sm:` | 640px | Large phones |
+| `md:` | 768px | Tablets |
+| `lg:` | 1024px | Laptops |
+| `xl:` | 1280px | Desktops |
+| `2xl:` | 1536px | Wide screens |
+
+## Grid layouts
+
+Start with a single column and expand at larger breakpoints:
+
+```css
+.container {
+  @apply grid
+    grid-cols-1
+    gap-4
+    md:grid-cols-2
+    lg:grid-cols-3;
+}
+```
+
+This renders one column on mobile, two columns on tablet, and three columns on desktop.
+
+## Typography scaling
+
+Scale font sizes up at wider viewports:
+
+```css
+.title {
+  @apply text-lg
+    md:text-xl
+    lg:text-2xl;
+}
+
+.body {
+  @apply text-base
+    md:text-lg;
+}
+```
+
+## Spacing
+
+Adjust padding and gaps at different sizes:
+
+```css
+.section {
+  @apply px-4
+    py-8
+    md:px-8
+    md:py-12
+    lg:px-16
+    lg:py-16;
+}
+```
+
+## Visibility
+
+Show or hide elements at specific breakpoints:
+
+```css
+.mobileOnly {
+  @apply block
+    md:hidden;
+}
+
+.desktopOnly {
+  @apply hidden
+    md:block;
+}
+```
+
+## Flexbox direction
+
+Stack content vertically on mobile, horizontally on wider screens:
+
+```css
+.row {
+  @apply flex
+    flex-col
+    gap-4
+    md:flex-row
+    md:items-center;
+}
+```
+
+## Full example
+
+A card grid component that adapts from one to three columns:
+
+```css
+/* index.module.css */
+.grid {
+  @apply grid
+    grid-cols-1
+    gap-6
+    md:grid-cols-2
+    lg:grid-cols-3;
+}
+
+.card {
+  @apply flex
+    flex-col
+    gap-4
+    rounded-lg
+    border
+    border-gray-200
+    p-6;
+}
+
+.cardTitle {
+  @apply text-lg
+    font-semibold
+    md:text-xl;
+}
+```
+
+```tsx
+// index.tsx
+import type { FC } from 'react';
+import styles from './index.module.css';
+
+type CardGridProps = {
+  items: Array<{ title: string; body: string }>;
+};
+
+const CardGrid: FC<CardGridProps> = ({ items }) => (
+  <div className={styles.grid}>
+    {items.map(item => (
+      <div key={item.title} className={styles.card}>
+        <h3 className={styles.cardTitle}>{item.title}</h3>
+        <p>{item.body}</p>
+      </div>
+    ))}
+  </div>
+);
+
+export default CardGrid;
+```
+
+## Guidelines
+
+- Write base styles for mobile first, then layer breakpoint overrides.
+- Prefer Tailwind responsive prefixes over custom media queries.
+- Test layouts at `sm`, `md`, and `lg` breakpoints as a minimum.
+- Use `gap-*` utilities on grid and flex containers instead of margins on children.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Tailwind CSS" icon="wind" href="/components/tailwind">
+    How @apply and Tailwind v4 are configured.
+  </Card>
+  <Card title="CSS Modules" icon="palette" href="/components/css-modules">
+    File structure and scoping rules.
+  </Card>
+</CardGroup>

@@ -1,0 +1,198 @@
+---
+title: Site components
+description: Reference for apps/site/components — the Next.js-specific layer that wraps @node-core/ui-components with routing, i18n, theming, and site-specific logic.
+---
+
+The `apps/site/components/` directory contains components that depend on Next.js. These components import from `@node-core/ui-components` and add routing, internationalization, theming, and other framework-specific behavior.
+
+## Directory structure
+
+```
+apps/site/components/
+├── Blog/
+│   ├── BlogHeader/
+│   └── BlogPostCard/
+├── Common/
+│   └── Searchbox/
+├── Downloads/
+│   ├── DownloadButton/
+│   ├── DownloadLink.tsx
+│   ├── DownloadsTable/
+│   └── Release/
+├── EOL/
+├── MDX/
+│   ├── Calendar/
+│   ├── CodeBox/
+│   └── Image/
+├── Releases/
+│   ├── MinorReleasesTable/
+│   ├── PreviousReleasesTable/
+│   ├── ReleaseModal.tsx
+│   └── ReleaseOverview/
+├── Link.tsx
+├── withAvatarGroup.tsx
+├── withBadgeGroup.tsx
+├── withBanner.tsx
+├── withBlogCategories.tsx
+├── withBlogCrossLinks.tsx
+├── withBreadcrumbs.tsx
+├── withDownloadArchive.tsx
+├── withDownloadSection.tsx
+├── withFooter.tsx
+├── withLayout.tsx
+├── withLegal.tsx
+├── withMetaBar.tsx
+├── withNavBar.tsx
+├── withNodejsLogo.tsx
+├── withNodeRelease.tsx
+├── withReleaseAlertBox.tsx
+├── withReleaseSelect.tsx
+├── withSidebar.tsx
+└── withSidebarCrossLinks.tsx
+```
+
+## The wrapper pattern
+
+Site components follow a `with` prefix convention. Each `with*` component wraps a base component from `@node-core/ui-components` and injects Next.js-specific data:
+
+```tsx
+// apps/site/components/withBanner.tsx
+import Banner from '@node-core/ui-components/Common/Banner';
+import { useTranslations } from 'next-intl';
+
+import Link from '#site/components/Link';
+import { siteConfig } from '#site/next.json.mjs';
+import { dateIsBetween } from '#site/util/date';
+
+import type { FC } from 'react';
+
+const WithBanner: FC<{ section: string }> = ({ section }) => {
+  const banner = siteConfig.websiteBanners[section];
+  const t = useTranslations();
+
+  if (banner && dateIsBetween(banner.startDate, banner.endDate)) {
+    return (
+      <Banner type={banner.type}>
+        {banner.link ? (
+          <Link href={banner.link}>{banner.text}</Link>
+        ) : (
+          banner.text
+        )}
+      </Banner>
+    );
+  }
+
+  return null;
+};
+
+export default WithBanner;
+```
+
+## withNavBar
+
+The primary navigation bar. Composes `NavBar`, `SkipToContentButton`, `ThemeToggle`, `LanguageDropdown`, `WithBanner`, and `WithNodejsLogo`. Uses `usePathname`, `useRouter`, `useTheme`, `useLocale`, and `useTranslations`.
+
+```tsx
+import NavBar from '@node-core/ui-components/Containers/NavBar';
+import dynamic from 'next/dynamic';
+import { useLocale, useTranslations } from 'next-intl';
+import { useTheme } from 'next-themes';
+
+import { useRouter, usePathname } from '#site/navigation.mjs';
+
+const WithNavBar: FC = () => {
+  const { navigationItems } = useSiteNavigation();
+  const { theme, setTheme } = useTheme();
+  const pathname = usePathname();
+
+  return (
+    <NavBar
+      navItems={navigationItems.map(([, { label, link, target }]) => ({
+        link,
+        text: label,
+        target,
+      }))}
+      pathname={pathname}
+      as={Link}
+      Logo={WithNodejsLogo}
+    >
+      {/* ThemeToggle, LanguageDropdown, GitHub link */}
+    </NavBar>
+  );
+};
+```
+
+<Note>
+  `ThemeToggle` is loaded with `next/dynamic` and `ssr: false` to prevent hydration mismatches from theme detection.
+</Note>
+
+## withFooter
+
+Wraps the `Footer` container. Pulls social links and footer links from `siteNavigation`, translates link labels with `useTranslations`, and renders the current LTS and Current release versions via `WithNodeRelease`.
+
+## withSidebar
+
+Wraps the `Sidebar` container. Accepts `navKeys` to determine which navigation sections to display. Uses `usePathname` for active-link detection, `useRouter` for navigation on select, and `useScrollToElement` to preserve scroll position across route changes.
+
+```tsx
+type WithSidebarProps = {
+  navKeys: Array<NavigationKeys>;
+  context?: Record<string, RichTranslationValues>;
+};
+```
+
+## withLayout
+
+Routes page content to the correct layout component based on the `layout` frontmatter key:
+
+```tsx
+const layouts = {
+  about: AboutLayout,
+  home: GlowingBackdropLayout,
+  learn: LearnLayout,
+  page: DefaultLayout,
+  'blog-post': PostLayout,
+  'blog-category': BlogLayout,
+  download: DownloadLayout,
+  'download-archive': DownloadArchiveLayout,
+  article: ArticlePageLayout,
+};
+
+const WithLayout: FC<WithLayoutProps<Layouts>> = ({ layout, children }) => {
+  const LayoutComponent = layouts[layout] ?? DefaultLayout;
+  return <LayoutComponent>{children}</LayoutComponent>;
+};
+```
+
+## Domain-specific subdirectories
+
+### Blog/
+
+- `BlogHeader/` — page header for blog listing and category pages
+- `BlogPostCard/` — card component for individual blog post previews
+
+### Downloads/
+
+- `DownloadButton/` — platform-aware download button
+- `DownloadLink.tsx` — anchor for triggering file downloads
+- `DownloadsTable/` — table of release downloads
+- `Release/` — release-specific download UI
+
+### MDX/
+
+Components available inside MDX page content:
+
+- `Calendar/` — event calendar
+- `CodeBox/` — enhanced code block (wraps `@node-core/ui-components/Common/BaseCodeBox`)
+- `Image/` — image with Next.js optimization
+
+### Releases/
+
+- `MinorReleasesTable/` — table of minor releases for a major version
+- `PreviousReleasesTable/` — table of end-of-life and older releases
+- `ReleaseModal.tsx` — modal dialog showing release details
+- `ReleaseOverview/` — summary cards for active release lines
+
+## Link component
+
+`Link.tsx` wraps Next.js `<Link>` and is passed as the `as` prop to base components that render anchors. This lets `@node-core/ui-components` components use client-side navigation without importing Next.js directly.

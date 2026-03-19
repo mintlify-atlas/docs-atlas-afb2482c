@@ -1,0 +1,147 @@
+---
+title: MDX Features
+description: MDX capabilities available in nodejs.org content pages — GitHub Flavored Markdown, consecutive code block tabs, cjs/mjs display names, React components in content, and Shiki syntax highlighting.
+---
+
+Content pages on the Node.js website use MDX — Markdown extended with JSX. In addition to standard Markdown, a set of Remark and Rehype plugins enable features that are specific to this codebase.
+
+## GitHub Flavored Markdown (GFM)
+
+The `remark-gfm` plugin (`~4.0.1`) adds GitHub Flavored Markdown support:
+
+- **Tables** — standard pipe-delimited table syntax
+- **Strikethrough** — `~~text~~`
+- **Task lists** — `- [ ] item` and `- [x] item`
+- **Autolinks** — bare URLs are auto-linked
+- **Footnotes** — `[^1]` references
+
+```md
+| Column A | Column B |
+|----------|----------|
+| value 1  | value 2  |
+
+~~deprecated feature~~
+
+- [x] Done
+- [ ] Not done
+```
+
+## Code Blocks with Syntax Highlighting
+
+All fenced code blocks are processed by Shiki at build time via the `@node-core/rehype-shiki` package. Shiki outputs pre-highlighted HTML — no client-side JS is needed for code coloring.
+
+Specify the language after the opening triple backticks:
+
+````md
+```javascript
+const http = require('node:http');
+
+const server = http.createServer((req, res) => {
+  res.end('Hello, Node.js!');
+});
+
+server.listen(3000);
+```
+````
+
+Supported languages include `javascript`, `typescript`, `bash`, `json`, `markdown`, `css`, `html`, `yaml`, and many more.
+
+## Tabbed Code Blocks
+
+Consecutive code blocks (no blank lines between them) are automatically rendered as a tabbed interface using Radix UI Tabs.
+
+````md
+```cjs
+const http = require('node:http');
+```
+
+```mjs
+import http from 'node:http';
+```
+````
+
+This produces a tab group with two tabs labeled **CJS** and **ESM** (derived from the language identifiers `cjs` and `mjs`).
+
+<Note>
+  The tab labels "CJS" and "ESM" are the display names used for `cjs` and `mjs` language tags. All other language identifiers show their name as-is.
+</Note>
+
+### Custom Display Names
+
+Any code tab can override its label using the `displayName` attribute:
+
+````md
+```cjs displayName="CommonJS (node:http)"
+const http = require('node:http');
+```
+
+```mjs displayName="ESM (node:http)"
+import http from 'node:http';
+```
+````
+
+This is useful when showing multiple modules side by side:
+
+````md
+```cjs displayName="node:http"
+const http = require('node:http');
+```
+
+```mjs displayName="node:vm"
+import vm from 'node:vm';
+```
+````
+
+## React Components in Content
+
+Because content files are MDX, you can embed React components directly in Markdown. Components must be imported at the top of the MDX file:
+
+```mdx
+import MyComponent from '../components/MyComponent';
+
+# My Page
+
+Some text, then a component:
+
+<MyComponent prop="value" />
+
+More text after.
+```
+
+Components available globally (without explicit import) are registered in the MDX provider configuration.
+
+## Heading Anchors
+
+Two plugins work together to make headings linkable:
+
+- **`rehype-slug`** (`~6.0.0`) — generates a kebab-case `id` attribute on every heading based on its text content
+- **`rehype-autolink-headings`** (`~7.1.0`) — injects an `<a>` anchor link inside each heading, pointing to its `id`
+
+This enables deep-linking to specific sections within a page.
+
+## Table of Contents
+
+The `@vcarl/remark-headings` plugin (`~0.1.0`) extracts heading metadata from each page at build time. This data is consumed by layout components (such as `Learn`) to automatically generate a table of contents in the meta bar.
+
+## Reading Time
+
+The `remark-reading-time` plugin (`~2.0.2`) calculates an estimated reading time for each page based on word count. This is surfaced in the meta bar of layouts that include `WithMetaBar`.
+
+## Full Processing Pipeline
+
+Content processing happens in this order when a page is compiled:
+
+```
+Markdown source
+  → gray-matter (frontmatter extraction)
+  → @mdx-js/mdx compiler
+    → remark-gfm (GFM syntax)
+    → @vcarl/remark-headings (heading metadata)
+    → remark-reading-time (reading time)
+  → rehype-slug (heading IDs)
+  → rehype-autolink-headings (anchor links)
+  → @node-core/rehype-shiki (syntax highlighting)
+  → React component output
+  → Layout wrapper
+  → Localized page
+```

@@ -1,0 +1,93 @@
+---
+title: "Installation"
+description: "Fork, clone, and set up the Node.js website repository on your machine."
+---
+
+This page walks through getting a local copy of the Node.js website repository ready for development.
+
+<Steps>
+  <Step title="Fork the repository">
+    Go to [github.com/nodejs/nodejs.org](https://github.com/nodejs/nodejs.org) and click the **Fork** button in the top-right corner to create a copy under your GitHub account.
+  </Step>
+
+  <Step title="Clone your fork">
+    Clone your fork to your local machine. Choose the method that matches how you authenticate with GitHub:
+
+    <CodeGroup>
+
+    ```bash SSH
+    git clone git@github.com:<YOUR_GITHUB_USERNAME>/nodejs.org.git
+    ```
+
+    ```bash HTTPS
+    git clone https://github.com/<YOUR_GITHUB_USERNAME>/nodejs.org.git
+    ```
+
+    ```bash GitHub CLI
+    gh repo clone <YOUR_GITHUB_USERNAME>/nodejs.org
+    ```
+
+    </CodeGroup>
+
+    Then navigate into the project directory:
+
+    ```bash
+    cd nodejs.org
+    ```
+  </Step>
+
+  <Step title="Add the upstream remote">
+    Add the original `nodejs/nodejs.org` repository as an upstream remote so you can keep your fork in sync.
+
+    <CodeGroup>
+
+    ```bash SSH
+    git remote add upstream git@github.com:nodejs/nodejs.org.git
+    ```
+
+    ```bash HTTPS
+    git remote add upstream https://github.com/nodejs/nodejs.org.git
+    ```
+
+    ```bash GitHub CLI
+    gh repo sync nodejs/nodejs.org
+    ```
+
+    </CodeGroup>
+
+    Verify your remotes are configured correctly:
+
+    ```bash
+    git remote -v
+    ```
+
+    You should see both `origin` (your fork) and `upstream` (the main repository) listed.
+  </Step>
+
+  <Step title="Install dependencies">
+    Install all project dependencies using pnpm with the frozen lockfile flag to ensure consistent installs:
+
+    ```bash
+    pnpm install --frozen-lockfile
+    ```
+
+    <Note>
+    The `--frozen-lockfile` flag ensures your local install matches the exact dependency versions recorded in `pnpm-lock.yaml`. This keeps your environment consistent with CI and other contributors.
+    </Note>
+  </Step>
+</Steps>
+
+## Keeping your fork up to date
+
+Before starting any new work, sync your fork with the upstream repository:
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+## Next steps
+
+With the repository installed, start the development server to verify everything is working:
+
+- [Start the development server](/setup/development-server)

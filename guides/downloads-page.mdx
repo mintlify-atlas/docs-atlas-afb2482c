@@ -1,0 +1,220 @@
+---
+title: Downloads Page
+description: How to add and modify installation methods and package managers on the Node.js downloads page, including compatibility configuration and snippet development.
+---
+
+The downloads page at `/download` lets users choose how to install Node.js across different operating systems, architectures, and package managers. The page is driven by configuration, icons, TypeScript type definitions, code snippets, and translation strings.
+
+## Overview
+
+The downloads page supports three categories of options:
+
+- **Installation Methods** — Direct ways to install Node.js (official installers, version managers, etc.)
+- **Package Managers** — Third-party package managers that can install Node.js
+- **Platform Compatibility** — Per-method restrictions by OS, Node.js version, and CPU architecture
+
+## Adding an installation method
+
+<Steps>
+  <Step title="Update the configuration">
+    Add your method to the `INSTALL_METHODS` array in `apps/site/util/downloadUtils.tsx`:
+
+    ```javascript
+    export const INSTALL_METHODS = [
+      // ...existing methods...
+      {
+        iconImage: <InstallMethodIcons.YourIconImage width={16} height={16} />,
+        url: 'https://example.com/install-guide',
+        value: 'exampleMethod',
+        recommended: false, // only true for official methods
+        compatibility: {
+          os: ['LINUX', 'MAC'],       // optional OS restriction
+          semver: ['>=14.0.0'],       // optional version restriction
+          platform: ['x64', 'arm64'], // optional architecture restriction
+        },
+      },
+    ];
+    ```
+
+    | Property | Description |
+    |---|---|
+    | `iconImage` | React component for the method icon |
+    | `url` | Link to official installation docs |
+    | `value` | Unique identifier string |
+    | `recommended` | `true` only for official/first-party methods |
+    | `compatibility` | Optional restrictions (see below) |
+  </Step>
+  <Step title="Create an icon component">
+    Add the SVG icon to `@node-core/ui-components/Icons/InstallationMethod/`:
+
+    ```tsx
+    // packages/ui-components/src/Icons/InstallationMethod/YourIconImage.tsx
+    import type { FC, SVGProps } from 'react';
+
+    const YourIconImage: FC<SVGProps<SVGSVGElement>> = props => (
+      <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+        {/* SVG path data */}
+      </svg>
+    );
+
+    export default YourIconImage;
+    ```
+
+    Then export it from the index file:
+
+    ```tsx
+    // packages/ui-components/src/Icons/InstallationMethod/index.tsx
+    export { default as YourIconImage } from './YourIconImage';
+    ```
+  </Step>
+  <Step title="Add TypeScript types">
+    Update `apps/site/types/release.ts` to include the new method value:
+
+    ```typescript
+    export type InstallationMethod =
+      | 'exampleMethod'
+      | 'anotherMethod'
+      | /* existing values */;
+
+    export const InstallationMethodLabel: Record<InstallationMethod, string> = {
+      exampleMethod: 'Example Method',
+      // ...existing entries
+    };
+    ```
+  </Step>
+  <Step title="Write an installation snippet">
+    Create a Bash snippet in `apps/site/snippets/en/download/`:
+
+    ```bash
+    # apps/site/snippets/en/download/exampleMethod.bash
+
+    # Install Node.js ${props.version} using Example Method
+    curl -fsSL https://example.com/install.sh | bash -s -- ${props.version}
+
+    # Verify installation
+    node --version
+    npm --version
+    ```
+
+    Snippets are template literals with access to a `props` object:
+
+    | Variable | Example value |
+    |---|---|
+    | `props.version` | `24.0.0` |
+    | `props.major` | `24` |
+    | `props.versionWithPrefix` | `v24.0.0` |
+  </Step>
+  <Step title="Add a translation key">
+    Add descriptive text to `packages/i18n/src/locales/en.json`:
+
+    ```json
+    {
+      "layouts": {
+        "download": {
+          "codeBox": {
+            "platformInfo": {
+              "exampleMethod": "Install Node.js using the Example Method. This method provides automatic updates and easy version management."
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Adding a package manager
+
+Package managers follow the same five-step process, but use `PACKAGE_MANAGERS` in `downloadUtils.tsx` instead of `INSTALL_METHODS`, and icons go in `@node-core/ui-components/Icons/PackageManager/`.
+
+```javascript
+export const PACKAGE_MANAGERS = [
+  // ...existing managers...
+  {
+    iconImage: <PackageManagerIcons.YourManager width={16} height={16} />,
+    url: 'https://your-package-manager.com',
+    value: 'yourManager',
+    compatibility: {
+      os: ['LINUX', 'MAC', 'WIN'],
+      platform: ['x64', 'arm64'],
+    },
+  },
+];
+```
+
+## Compatibility configuration
+
+The `compatibility` object on each method controls when it appears in the UI. All fields are optional; omitting a field means no restriction applies.
+
+<AccordionGroup>
+  <Accordion title="Operating system restrictions">
+    ```javascript
+    compatibility: {
+      os: ['LINUX', 'MAC', 'WIN'],
+    }
+    ```
+
+    | Value | Platform |
+    |---|---|
+    | `LINUX` | Linux distributions |
+    | `MAC` | macOS |
+    | `WIN` | Windows |
+  </Accordion>
+  <Accordion title="Version restrictions">
+    Uses semver range syntax:
+
+    ```javascript
+    compatibility: {
+      semver: ['>=14.0.0', '<21.0.0'],
+    }
+    ```
+
+    | Range | Meaning |
+    |---|---|
+    | `>=14.0.0` | Version 14.0.0 and higher |
+    | `<21.0.0` | Below version 21.0.0 |
+    | `^18.0.0` | Compatible with 18.x.x |
+    | `~20.1.0` | Compatible with 20.1.x |
+  </Accordion>
+  <Accordion title="Architecture restrictions">
+    ```javascript
+    compatibility: {
+      platform: ['x64', 'arm64', 'x86'],
+    }
+    ```
+
+    | Value | Architecture |
+    |---|---|
+    | `x64` | 64-bit x86 |
+    | `arm64` | 64-bit ARM |
+    | `x86` | 32-bit x86 |
+  </Accordion>
+  <Accordion title="Combined restrictions">
+    Fields are ANDed together. A method with all three restrictions only appears when all conditions match:
+
+    ```javascript
+    compatibility: {
+      os: ['LINUX', 'MAC'],
+      semver: ['>=16.0.0'],
+      platform: ['x64', 'arm64'],
+    }
+    ```
+
+    This method appears only for Linux or macOS users on Node.js 16.0.0 or higher running x64 or ARM64 hardware.
+  </Accordion>
+</AccordionGroup>
+
+## Snippet template syntax
+
+Snippets use JavaScript template literal expressions with access to `props`:
+
+```bash
+# Basic version interpolation
+echo "Installing Node.js ${props.version}"
+
+# Conditional content
+${props.major >= 18 ? '# Node.js 18+ features available' : '# Using legacy Node.js'}
+
+# URL construction
+curl -o nodejs.tar.gz "https://nodejs.org/dist/v${props.version}/node-v${props.version}-linux-x64.tar.gz"
+```

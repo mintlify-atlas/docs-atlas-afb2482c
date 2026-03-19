@@ -1,0 +1,115 @@
+---
+title: Vercel Deployment
+description: How nodejs.org is deployed on Vercel — automatic deployments on push to main, branch preview deployments, the custom install script, and critical dependency placement rules.
+---
+
+The primary production deployment of the Node.js website is hosted on Vercel. Deployment is sponsored by the OpenJS Foundation.
+
+## How Deployments Work
+
+<Steps>
+  <Step title="Push to main">
+    Every push to the `main` branch triggers an automatic Vercel deployment. The site is built using `pnpm build` (which runs `next build`) and deployed globally.
+  </Step>
+  <Step title="Branch previews">
+    Pull requests automatically receive a preview deployment URL. This allows reviewers to see the live changes without merging.
+  </Step>
+  <Step title="Excluded branches">
+    Branches matching `dependabot/*` and `gh/*` are excluded from automatic preview deployments to avoid unnecessary build consumption.
+  </Step>
+</Steps>
+
+## Custom Install Script
+
+Vercel uses a custom install command rather than the default `npm install`:
+
+```bash
+pnpm install --prod --frozen-lockfile
+```
+
+The `--prod` flag means **only `dependencies` are installed** — `devDependencies` are skipped entirely during the Vercel build.
+
+<Warning>
+  This is a critical rule: any package that is needed at **build time** must be listed under `dependencies` in `apps/site/package.json`, **not** `devDependencies`.
+
+  If a build-time package is placed in `devDependencies`, the Vercel build will fail because the package won't be installed.
+</Warning>
+
+### Why This Matters
+
+In standard Node.js projects, `devDependencies` are packages only needed for development (testing, linting, type checking). In this project, because Vercel skips `devDependencies`, anything used during `next build` — including MDX plugins, data processing tools, and content utilities — must be in `dependencies`.
+
+Notable packages in `dependencies` for this reason:
+
+- `@mdx-js/mdx` — MDX compilation at build time
+- `@node-core/rehype-shiki` — Syntax highlighting at build time
+- `gray-matter` — Frontmatter parsing at build time
+- `remark-gfm`, `rehype-slug`, `rehype-autolink-headings` — Content processing at build time
+- `next-intl` — i18n at build time
+
+## Environment Variables
+
+Vercel provides several system environment variables consumed by the site:
+
+| Variable | Source | Purpose |
+|---|---|---|
+| `VERCEL_ENV` | Vercel system | Identifies Vercel environment (`production`, `preview`, `development`) |
+| `VERCEL_URL` | Vercel system | Full deployment URL (used to construct `BASE_URL`) |
+| `NEXT_PUBLIC_BASE_URL` | Manual override | Override the canonical base URL |
+| `NEXT_GITHUB_API_KEY` | Manual secret | GitHub API token to avoid rate limiting |
+
+```javascript
+// next.constants.mjs
+export const VERCEL_ENV = process.env.VERCEL_ENV || undefined;
+
+export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+  ? process.env.NEXT_PUBLIC_BASE_URL
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'https://nodejs.org';
+```
+
+## Build Configuration
+
+The Vercel project is configured to:
+
+- Use pnpm as the package manager
+- Run `pnpm build` as the build command (executes from `apps/site/`)
+- Serve from the `apps/site/.next/` directory
+- Enable the React Compiler (`reactCompiler: true` in `next.config.mjs`)
+
+## Performance Features
+
+The Next.js configuration enables several performance-oriented experimental features that benefit the Vercel build:
+
+```javascript
+// next.config.mjs
+experimental: {
+  serverMinification: true,          // Minify server-side code
+  webpackBuildWorker: true,          // Parallel webpack compilation
+  parallelServerBuildTraces: true,   // Parallel server build traces
+  parallelServerCompiles: true,      // Parallel server compilation
+  turbopackFileSystemCacheForDev: true, // Dev-only: faster Turbopack
+  optimizePackageImports: [          // Tree-shake these packages
+    '@radix-ui/react-accessible-icon',
+    '@radix-ui/react-dropdown-menu',
+    '@radix-ui/react-label',
+    '@radix-ui/react-select',
+    '@radix-ui/react-tabs',
+    '@radix-ui/react-tooltip',
+    '@radix-ui/react-avatar',
+    'tailwindcss',
+    'shiki',
+  ],
+}
+```
+
+## Skew Protection
+
+Vercel provides [version skew protection](https://vercel.com/docs/skew-protection) out of the box. This ensures that users who loaded an older version of the site's JavaScript still receive correct API responses even after a new deployment — preventing errors caused by mismatched client/server versions.
+
+For the Cloudflare deployment, skew protection requires additional manual configuration. See [Cloudflare Deployment](/architecture/cloudflare-deployment).
+
+## Ownership
+
+The Vercel project is owned and maintained by the **OpenJS Foundation** under the `nodejs-vercel` GitHub account. Sponsorship of the hosting is managed by the OpenJS Foundation.

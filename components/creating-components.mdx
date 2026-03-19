@@ -1,0 +1,200 @@
+---
+title: Creating components
+description: Step-by-step guide to creating React components in the Node.js website project, covering file structure, TypeScript patterns, and naming conventions.
+---
+
+This guide covers the conventions for creating new React components in this project. Follow these patterns so every component is consistent, testable, and easy to maintain.
+
+## File structure
+
+Each component lives in its own directory. The directory name is the component name in PascalCase.
+
+```
+ComponentName/
+├── index.tsx                 # Component implementation
+├── index.module.css          # Component styles
+├── index.stories.tsx         # Storybook stories (ui-components only)
+└── __tests__/
+    └── index.test.mjs        # Unit tests
+```
+
+### Sub-components
+
+When a component is composed of smaller pieces, nest them as subdirectories:
+
+```
+ComponentName/
+├── index.tsx
+├── index.module.css
+├── SubComponent/
+│   ├── index.tsx
+│   └── index.module.css
+└── AnotherSubComponent/
+    ├── index.tsx
+    └── index.module.css
+```
+
+<Note>
+  Storybook stories (`index.stories.tsx`) are only required for components in `@node-core/ui-components`. Components in `apps/site/components` do not need story files.
+</Note>
+
+## Deciding where to put the component
+
+Before writing any code, determine which package owns the component:
+
+- **`@node-core/ui-components`** — pure UI, no Next.js imports
+- **`apps/site/components`** — requires routing, i18n, theming, or other Next.js APIs
+
+See [Components overview](/components/overview) for the full decision guide.
+
+## Basic component template
+
+The minimal structure for a functional component:
+
+```tsx
+import type { FC } from 'react';
+
+import styles from './index.module.css';
+
+type MyComponentProps = {
+  title: string;
+  description?: string;
+  isVisible?: boolean;
+};
+
+const MyComponent: FC<MyComponentProps> = ({
+  title,
+  description,
+  isVisible = true,
+}) => {
+  if (!isVisible) return null;
+
+  return (
+    <div className={styles.container}>
+      <h2 className={styles.title}>{title}</h2>
+      {description && <p className={styles.description}>{description}</p>}
+    </div>
+  );
+};
+
+export default MyComponent;
+```
+
+## Component with children
+
+Use `PropsWithChildren` when the component renders arbitrary child content:
+
+```tsx
+import type { FC, PropsWithChildren } from 'react';
+
+import styles from './index.module.css';
+
+type CardProps = PropsWithChildren<{
+  title: string;
+  variant?: 'default' | 'highlighted';
+}>;
+
+const Card: FC<CardProps> = ({ title, variant = 'default', children }) => (
+  <div className={`${styles.card} ${styles[variant]}`}>
+    <h3 className={styles.title}>{title}</h3>
+    <div className={styles.content}>{children}</div>
+  </div>
+);
+
+export default Card;
+```
+
+## TypeScript conventions
+
+### Prop types
+
+```tsx
+// Prefix prop types with the component name
+type ButtonProps = {
+  variant: 'primary' | 'secondary' | 'danger';
+  size: 'small' | 'medium' | 'large';
+  isLoading?: boolean;
+  onClick?: () => void;
+};
+
+// Extend HTML attributes when appropriate
+type InputProps = InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+  error?: string;
+};
+
+// Use PropsWithChildren for components that accept children
+type ContainerProps = PropsWithChildren<{
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+}>;
+```
+
+### Import patterns
+
+```tsx
+// Type-only imports use the `type` keyword
+import type { FC, HTMLAttributes, MouseEvent } from 'react';
+
+// Regular imports
+import { useState, useEffect } from 'react';
+import { Button } from '@node-core/ui-components';
+
+// Never import React itself
+// ❌ import React from 'react';
+// ✅ import type { FC } from 'react';
+```
+
+<Warning>
+  Always use `import type` for type-only imports. Importing values where types are sufficient adds unnecessary runtime overhead.
+</Warning>
+
+## Framework-agnostic component example
+
+This is the full `Button` component from `@node-core/ui-components`, showing how to extend native HTML attributes:
+
+```tsx
+// @node-core/ui-components/src/Common/Button/index.tsx
+import type { FC, ButtonHTMLAttributes } from 'react';
+
+import styles from './index.module.css';
+
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'primary' | 'secondary';
+  size?: 'small' | 'medium' | 'large';
+};
+
+const Button: FC<ButtonProps> = ({
+  variant = 'primary',
+  size = 'medium',
+  children,
+  className,
+  ...props
+}) => (
+  <button
+    className={`${styles.button} ${styles[variant]} ${styles[size]} ${className || ''}`}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+export default Button;
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="CSS Modules" icon="palette" href="/components/css-modules">
+    Add styles to your new component.
+  </Card>
+  <Card title="Unit tests" icon="flask" href="/components/unit-tests">
+    Write tests for your component.
+  </Card>
+  <Card title="Storybook" icon="book-open" href="/components/storybook">
+    Create stories for visual development.
+  </Card>
+  <Card title="UI components" icon="box" href="/components/ui-components">
+    Browse existing components before building new ones.
+  </Card>
+</CardGroup>

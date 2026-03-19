@@ -1,0 +1,72 @@
+---
+title: "Development server"
+description: "Run the Node.js website locally and understand the available CLI commands."
+---
+
+Once you have [installed the repository](/setup/installation), you can start the local development server and begin making changes.
+
+## Starting the server
+
+```bash
+pnpm dev
+```
+
+This starts the Next.js development server. Once ready, open [http://localhost:3000](http://localhost:3000) in your browser.
+
+<Note>
+The dev command runs `build:blog-data` as a pre-step before starting the Next.js server. This pre-build step is automatic — you do not need to run it manually.
+</Note>
+
+## Hot module replacement
+
+The development server uses Next.js Hot Module Replacement (HMR). When you save a file, the browser updates automatically without a full page reload. Most changes to React components, styles, and content files are reflected instantly.
+
+## Environment variables
+
+The site uses `NODE_NO_WARNINGS=1` in development mode to suppress Node.js warnings that originate from dependencies. This is set automatically by the `dev` script — you do not need to configure it yourself.
+
+For any environment-specific configuration, check the `.env.example` file in the repository root if one exists.
+
+## Available commands
+
+### Development commands
+
+| Command | Description |
+|---|---|
+| `pnpm dev` | Start the local development server at `http://localhost:3000` |
+| `pnpm build` | Build the site for production (used by Vercel deployments) |
+| `pnpm deploy` | Build for static export (legacy server deployment) |
+| `pnpm start` | Start the server using previously built content |
+| `pnpm storybook` | Start the Storybook development server for UI components |
+| `pnpm storybook:build` | Build Storybook for publishing |
+
+### Code quality commands
+
+| Command | Description |
+|---|---|
+| `pnpm lint` | Run the linter across all files |
+| `pnpm lint:fix` | Attempt to automatically fix linting errors |
+| `pnpm prettier` | Check formatting for JS, TS, MD, MDX, JSON, YAML, and CSS files |
+| `pnpm prettier:fix` | Automatically fix formatting issues |
+| `pnpm format` | Run all formatting and lint fixes across the entire codebase |
+
+### Testing commands
+
+| Command | Description |
+|---|---|
+| `pnpm test` | Run all unit tests locally |
+| `pnpm test:unit` | Run unit tests only |
+| `pnpm test:ci` | Run tests with CI output format (lcov, JUnit, GitHub reporter) |
+
+### Other commands
+
+| Command | Description |
+|---|---|
+| `pnpm scripts:release-post -- --version=vXX.X.X --force` | Generate a release blog post |
+
+## Next steps
+
+With the development server running, you're ready to make your first contribution:
+
+- [Make your first contribution](/contributing/first-contribution)
+- [Review the code style guidelines](/contributing/code-style)

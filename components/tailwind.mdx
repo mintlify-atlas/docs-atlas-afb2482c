@@ -1,0 +1,121 @@
+---
+title: Tailwind CSS
+description: How Tailwind CSS v4 is integrated into the Node.js website via PostCSS, and how to use @apply inside CSS Modules.
+---
+
+The project uses [Tailwind CSS v4](https://tailwindcss.com) integrated via PostCSS. Tailwind utilities are not applied directly in JSX class attributes — they are composed into CSS Modules using the `@apply` directive.
+
+## Integration
+
+Both `@node-core/ui-components` and `apps/site` configure Tailwind through PostCSS using `@tailwindcss/postcss`:
+
+```json
+{
+  "dependencies": {
+    "@tailwindcss/postcss": "~4.2.1",
+    "tailwindcss": "catalog:"
+  }
+}
+```
+
+The PostCSS pipeline processes `*.module.css` files and replaces `@apply` directives with the corresponding CSS output.
+
+## Using @apply
+
+Inside a CSS Module, use `@apply` to reference Tailwind utility classes:
+
+```css
+.container {
+  @apply flex
+    flex-col
+    gap-4
+    rounded-lg
+    bg-white
+    p-6
+    shadow-sm;
+}
+
+.title {
+  @apply text-xl
+    font-semibold
+    text-gray-900;
+}
+```
+
+<Tip>
+  Write one utility per line. This makes it easy to spot what each rule does and produces cleaner diffs when properties change.
+</Tip>
+
+## When to use Tailwind vs. custom CSS
+
+| Situation | Recommendation |
+|---|---|
+| Layout, spacing, sizing, color | Use `@apply` with Tailwind utilities |
+| Typography scale, font weight | Use `@apply` with Tailwind utilities |
+| Pseudo-states (`:hover`, `:focus`) | Use Tailwind variant utilities via `@apply` |
+| Complex `clip-path` or custom transforms | Write plain CSS |
+| CSS custom properties / design tokens | Write plain CSS |
+| Animations with specific keyframes | Write plain CSS `@keyframes` |
+
+<Note>
+  Avoid writing plain CSS for anything Tailwind covers. This keeps the design system consistent and avoids magic numbers scattered across stylesheets.
+</Note>
+
+## Responsive utilities
+
+Tailwind's responsive prefixes (`md:`, `lg:`) work inside `@apply`:
+
+```css
+.grid {
+  @apply grid
+    grid-cols-1
+    gap-4
+    md:grid-cols-2
+    lg:grid-cols-3;
+}
+```
+
+See [Responsive design](/components/responsive-design) for patterns and breakpoint reference.
+
+## Dark mode
+
+Tailwind dark mode utilities are available with the `dark:` prefix:
+
+```css
+.card {
+  @apply bg-white
+    text-gray-900
+    dark:bg-gray-900
+    dark:text-gray-100;
+}
+```
+
+The site uses `next-themes` to manage the active theme and applies a `dark` class to the root element.
+
+## Compilation
+
+For `@node-core/ui-components`, CSS is compiled separately from TypeScript:
+
+```bash
+# Compile CSS only
+pnpm compile:css
+
+# Compile TypeScript and CSS together
+pnpm compile
+
+# Watch mode for development
+pnpm compile:watch
+```
+
+The compiled CSS is emitted to `dist/` alongside the compiled JavaScript.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="CSS Modules" icon="palette" href="/components/css-modules">
+    File structure, naming, and scoping rules.
+  </Card>
+  <Card title="Responsive design" icon="monitor" href="/components/responsive-design">
+    Breakpoint reference and mobile-first patterns.
+  </Card>
+</CardGroup>

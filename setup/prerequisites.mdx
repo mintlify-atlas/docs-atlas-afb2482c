@@ -1,0 +1,103 @@
+---
+title: "Prerequisites"
+description: "Everything you need to install before contributing to the Node.js website."
+---
+
+Before you can contribute to the Node.js website, you need a few tools set up on your machine. This page walks through each requirement and how to verify it.
+
+## Required tools
+
+<CardGroup cols={2}>
+  <Card title="Node.js v24.11.0+" icon="server">
+    The project requires Node.js `>=v24.11.0`. The repository includes an `.nvmrc` set to `v24`.
+  </Card>
+  <Card title="pnpm 10.28.2" icon="box">
+    This project uses pnpm as its package manager. The exact version `10.28.2` is enforced via `packageManager` in `package.json`.
+  </Card>
+  <Card title="Git" icon="git-branch">
+    You need Git installed to clone the repository and manage branches.
+  </Card>
+  <Card title="GitHub account" icon="github">
+    You need a GitHub account to fork the repository and open pull requests.
+  </Card>
+</CardGroup>
+
+## Node.js
+
+The project requires Node.js `>=v24.11.0`. This is enforced via `devEngines` in `package.json` — you will receive an error if you try to run the project with an older version.
+
+Verify your Node.js version:
+
+```bash
+node --version
+```
+
+If you use [nvm](https://github.com/nvm-sh/nvm), the repository ships with an `.nvmrc` file pinned to `v24`. Run this from the project root to switch automatically:
+
+```bash
+nvm use
+```
+
+## pnpm
+
+The project uses pnpm `10.28.2`. This exact version is declared in `package.json` under `packageManager` and is enforced at runtime.
+
+Install pnpm via Corepack (recommended, ships with Node.js):
+
+```bash
+corepack enable
+corepack prepare pnpm@10.28.2 --activate
+```
+
+Or install it directly:
+
+```bash
+npm install -g pnpm@10.28.2
+```
+
+Verify the installed version:
+
+```bash
+pnpm --version
+```
+
+## Git
+
+Verify Git is installed:
+
+```bash
+git --version
+```
+
+If Git is not installed, follow the [official Git installation guide](https://git-scm.com/downloads).
+
+## GitHub account
+
+You need a GitHub account to:
+
+- Fork the repository
+- Push branches
+- Open pull requests
+
+If you don't have one, create an account at [github.com](https://github.com).
+
+## Recommended VS Code extensions
+
+If you use Visual Studio Code, the repository includes a `.vscode/extensions.json` file with recommended extensions. VS Code will prompt you to install them when you open the project.
+
+| Extension | Purpose |
+|---|---|
+| `esbenp.prettier-vscode` | Code formatting with Prettier |
+| `bradlc.vscode-tailwindcss` | Tailwind CSS IntelliSense and autocomplete |
+| `stylelint.vscode-stylelint` | CSS linting |
+| `unifiedjs.vscode-mdx` | MDX file support |
+| `dbaeumer.vscode-eslint` | JavaScript/TypeScript linting |
+| `editorconfig.editorconfig` | EditorConfig support |
+
+<Tip>
+You can install all recommended extensions at once by opening the Extensions panel in VS Code, searching for `@recommended`, and clicking **Install Workspace Recommended Extensions**.
+</Tip>
+
+## Next steps
+
+Once all tools are installed and verified, proceed to [Installation](/setup/installation) to fork and set up the repository.

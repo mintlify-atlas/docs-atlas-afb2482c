@@ -1,0 +1,183 @@
+---
+title: Site Configuration
+description: How to update site-wide settings in site.json and navigation.json, including RSS feeds, banners, badges, and navigation structure.
+---
+
+The Node.js website has two primary configuration files that control global metadata, navigation, and time-sensitive UI elements.
+
+<CardGroup cols={2}>
+  <Card title="apps/site/site.json" icon="gear">
+    Controls global metadata, RSS feeds, website banners, and badges. Exposed as a read-only JSON endpoint at `/site.json`.
+  </Card>
+  <Card title="apps/site/navigation.json" icon="bars">
+    Defines the top navigation bar, footer links, social links, and the Learn section sidebar.
+  </Card>
+</CardGroup>
+
+## site.json
+
+`apps/site/site.json` is a manually maintained JSON file imported via `apps/site/next.config.mjs` and served at the `/site.json` endpoint. It is also consumed externally by [doc-kit](https://github.com/nodejs/doc-kit), which uses it to display dynamic banners inside the Node.js API documentation site without requiring a doc-kit release.
+
+### Top-level metadata
+
+| Field | Description |
+|---|---|
+| `title` | Site title used in `<title>` tags and Open Graph metadata |
+| `description` | Default meta description |
+| `favicon` | Path to the favicon relative to `/public` |
+| `accentColor` | Primary accent color (hex) |
+
+### `twitter`
+
+Social card metadata for Twitter/X:
+
+| Field | Description |
+|---|---|
+| `username` | Twitter handle (e.g. `@nodejs`) |
+| `card` | Card type: `summary`, `summary_large_image`, etc. |
+| `img` | Path to the card image |
+| `imgAlt` | Alt text for the card image |
+
+### `rssFeeds`
+
+Array of RSS feed definitions. Each feed is statically generated at `/:locale/feed/:file`. Adding a new entry here is sufficient — no code changes are required.
+
+| Field | Description |
+|---|---|
+| `title` | Human-readable feed title |
+| `file` | Output filename (e.g. `blog.xml`) |
+| `category` | Blog category to include: `all`, `release`, `vulnerability`, etc. |
+
+### `websiteBanners`
+
+A map of keys to banner definitions. Banners appear at the top of the target page within the given date range and deactivate automatically outside that range without a redeploy.
+
+Keys are either a **page slug** (for nodejs.org pages), a **major version string** (for API doc banners), or `"all"` to target every API docs version.
+
+```json
+"websiteBanners": {
+  "index": {
+    "startDate": "2026-01-13T00:00:00.000Z",
+    "endDate":   "2026-01-20T00:00:00.000Z",
+    "text": "January Security Release is available",
+    "link": "https://nodejs.org/en/blog/vulnerability/january-2026-security-releases",
+    "type": "warning"
+  },
+  "all": {
+    "startDate": "2026-01-13T00:00:00.000Z",
+    "endDate":   "2026-01-20T00:00:00.000Z",
+    "text": "January Security Release affects all active versions",
+    "link": "https://nodejs.org/en/blog/vulnerability/january-2026-security-releases",
+    "type": "warning"
+  },
+  "v20": {
+    "startDate": "2026-04-30T00:00:00.000Z",
+    "endDate":   "2027-04-30T00:00:00.000Z",
+    "text": "Node.js 20 is End-of-Life",
+    "link": "https://nodejs.org/en/about/previous-releases",
+    "type": "error"
+  }
+}
+```
+
+| Field | Description |
+|---|---|
+| key | Page slug, major version (e.g. `v20`), or `all` |
+| `startDate` / `endDate` | ISO 8601 timestamps; the banner is hidden outside this range |
+| `text` | Banner message text |
+| `link` | URL the banner links to |
+| `type` | `warning` (orange) or `error` (red) |
+
+### `websiteBadges`
+
+A map of page slugs to badge definitions. Badges appear as small promotional labels near the page title.
+
+```json
+"websiteBadges": {
+  "index": {
+    "startDate": "2025-10-30T00:00:00.000Z",
+    "endDate":   "2025-11-15T00:00:00.000Z",
+    "kind":  "default",
+    "title": "Discover",
+    "text":  "New migration guides",
+    "link":  "https://nodejs.org/en/blog/migrations"
+  }
+}
+```
+
+| Field | Description |
+|---|---|
+| key | Page slug |
+| `startDate` / `endDate` | ISO 8601 timestamps |
+| `kind` | Badge style variant (e.g. `default`) |
+| `title` | Short label shown before the text |
+| `text` | Badge body text |
+| `link` | URL the badge links to |
+
+### Updating site.json
+
+<Steps>
+  <Step title="Edit the file">
+    Open `apps/site/site.json` and make your changes. No code changes are required for banners, badges, or new RSS feeds.
+  </Step>
+  <Step title="Format">
+    Run `pnpm format` to ensure consistent formatting:
+
+    ```bash
+    pnpm format
+    ```
+  </Step>
+  <Step title="Deploy">
+    Once merged, date-gated content (banners and badges) activates and deactivates automatically at runtime without a redeploy.
+  </Step>
+</Steps>
+
+### API endpoint
+
+The full contents of `site.json` are available at:
+
+```
+GET /site.json
+```
+
+The response is `application/json` and is statically cached at build time, refreshing on each deployment. The doc-kit fetches this endpoint asynchronously on page load to inject banners into the Node.js API documentation site.
+
+## navigation.json
+
+`apps/site/navigation.json` defines all navigation structures used across the site.
+
+### `topNavigation`
+
+Controls the main navigation bar at the top of every page. Each entry has a label (translation key) and a link.
+
+### `footerLinks`
+
+Groups of links displayed in the site footer. Each group has a label and an array of link entries.
+
+### `socialLinks`
+
+Links to the project's social media accounts (GitHub, Twitter/X, etc.).
+
+### `sideNavigation.learn`
+
+The sidebar navigation for the Learn section. It is an array of category objects, each with a `label` and an `items` map:
+
+```json
+{
+  "sideNavigation": {
+    "learn": [
+      {
+        "label": "getting-started",
+        "items": {
+          "introductionToNodejs": {
+            "link": "/learn/getting-started/introduction-to-nodejs",
+            "label": "components.navigation.learn.getting-started.introduction-to-nodejs"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+The `label` values are translation keys resolved from `packages/i18n/src/locales/en.json`. See [Adding Learn Articles](/guides/adding-learn-articles) for the full workflow.

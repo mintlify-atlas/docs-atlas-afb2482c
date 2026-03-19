@@ -1,0 +1,211 @@
+---
+title: Writing Tests
+description: Testing practices for the Node.js website — unit tests with node:test, end-to-end tests with Playwright, and visual regression testing with Storybook and Chromatic.
+---
+
+Each new feature or bug fix should be accompanied by appropriate tests. The repository uses multiple testing strategies:
+
+<CardGroup cols={3}>
+  <Card title="Unit tests" icon="flask">
+    Test individual functions, utilities, and React components in isolation using `node:test` and React Testing Library.
+  </Card>
+  <Card title="End-to-end tests" icon="browser">
+    Test complete user workflows with Playwright, running against the built application.
+  </Card>
+  <Card title="Visual tests" icon="eye">
+    Automated visual regression via Storybook stories and Chromatic.
+  </Card>
+</CardGroup>
+
+## Unit testing
+
+Unit tests use the built-in [`node:test`](https://nodejs.org/api/test.html) runner and [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
+
+### File locations
+
+Unit test files are co-located with their subjects using the `__tests__` convention:
+
+```
+packages/ui-components/src/
+└── Common/
+    └── MyComponent/
+        ├── index.tsx
+        └── __tests__/
+            └── index.test.mjs
+```
+
+### Writing a unit test
+
+```javascript
+// packages/ui-components/src/Common/MyComponent/__tests__/index.test.mjs
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import { render, screen } from '@testing-library/react';
+import MyComponent from '../index.js';
+
+describe('MyComponent', () => {
+  it('renders with default props', () => {
+    render(<MyComponent title="Test Title" />);
+
+    const heading = screen.getByRole('heading', { name: /test title/i });
+    assert(isVisible(heading));
+  });
+});
+```
+
+### Running unit tests
+
+```bash
+# Run all unit tests
+pnpm test
+
+# Watch mode (re-runs on file change)
+pnpm --filter @node-core/website test:unit:watch
+
+# CI mode with lcov, JUnit, and GitHub reporters
+pnpm test:ci
+```
+
+The `test:unit` command in `apps/site/package.json` runs:
+
+```bash
+node \
+  --experimental-test-coverage \
+  --test-coverage-exclude=**/*.test.* \
+  --experimental-test-module-mocks \
+  --enable-source-maps \
+  --import=global-jsdom/register \
+  --import=tsx \
+  --import=tests/setup.jsx \
+  --test **/*.test.*
+```
+
+## End-to-end testing
+
+Playwright is used for end-to-end tests that verify complete user flows from a browser perspective.
+
+### File location
+
+E2E test files live in `apps/site/tests/e2e/`:
+
+```
+apps/site/tests/
+└── e2e/
+    ├── navigation.test.js
+    └── ...
+```
+
+### Writing an E2E test
+
+```javascript
+// apps/site/tests/e2e/navigation.test.js
+import { test, expect } from '@playwright/test';
+
+test.describe('Website Navigation', () => {
+  test('user can navigate to download page', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByRole('link', { name: /download/i }).click();
+
+    await expect(page).toHaveURL(/.*\/download/);
+    await expect(
+      page.getByRole('heading', { name: /download node\.js/i })
+    ).toBeVisible();
+  });
+
+  test('search functionality works correctly', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByRole('button', { name: /search/i }).click();
+    await page.getByRole('searchbox').fill('getting started');
+
+    await expect(page.getByText(/search results/i)).toBeVisible();
+  });
+});
+```
+
+### E2E guidelines
+
+- Run tests against the built application to reflect production behavior
+- Focus on user flows and critical paths, not implementation details
+- Write resilient selectors using ARIA roles and accessible names
+- Prioritize testing functionality over exact visual appearance
+
+### Running E2E tests
+
+```bash
+# From apps/site
+pnpm playwright
+```
+
+## Visual testing with Storybook
+
+[Storybook](https://storybook.js.org/) serves as both interactive component documentation and the foundation for visual regression testing.
+
+### Writing a story
+
+```tsx
+// packages/ui-components/src/Common/MyComponent/index.stories.tsx
+import type { Meta as MetaObj, StoryObj } from '@storybook/react';
+import MyComponent from '@node-core/ui-components/Common/MyComponent';
+
+type Story = StoryObj<typeof MyComponent>;
+type Meta = MetaObj<typeof MyComponent>;
+
+export const Default: Story = {
+  args: {
+    title: 'Default Title',
+    isVisible: true,
+  },
+};
+
+export const Hidden: Story = {
+  args: {
+    title: 'Hidden Component',
+    isVisible: false,
+  },
+};
+
+export default {
+  component: MyComponent,
+  title: 'Common/MyComponent',
+  argTypes: {
+    isVisible: {
+      control: 'boolean',
+      description: 'Controls component visibility',
+    },
+  },
+} as Meta;
+```
+
+```bash
+# Start Storybook dev server
+pnpm storybook
+
+# Build static Storybook
+pnpm storybook:build
+```
+
+## Visual regression testing
+
+[Chromatic](https://www.chromatic.com/) runs automatically on pull requests via GitHub Actions:
+
+- Detects visual differences in component stories
+- Provides an approval workflow for intentional changes
+- Ensures visual consistency across updates
+
+No local configuration is required — Chromatic runs in CI only.
+
+## Continuous integration
+
+All test suites run automatically on:
+
+- Pull request creation and every subsequent push
+- Pushes to the `main` branch
+- Manual workflow triggers via `workflow_dispatch`
+
+CI checks must pass before a pull request can be merged.
+
+<Note>
+  The `test:ci` reporter output includes `lcov.info` (for coverage tooling), `junit.xml` (for test result dashboards), and GitHub-native annotations rendered directly in the PR interface.
+</Note>

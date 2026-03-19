@@ -1,0 +1,201 @@
+---
+title: "Code style"
+description: "Coding standards, formatting rules, and conventions used in the Node.js website project."
+---
+
+This page covers the coding standards and formatting conventions for the Node.js website. Following these guidelines ensures consistency across the codebase and keeps the CI checks passing.
+
+## Linting and formatting commands
+
+Run these commands to check and fix code style issues:
+
+```bash
+pnpm format       # Format and fix lints for the entire codebase (recommended)
+pnpm lint         # Run the linter across all files
+pnpm lint:fix     # Attempt to automatically fix linting errors
+pnpm prettier     # Check formatting for JS, TS, MD, MDX, JSON, YAML, and CSS files
+pnpm prettier:fix # Automatically fix formatting issues
+```
+
+<Tip>
+Run `pnpm format` before every commit. It covers Prettier, ESLint fixes, and all other formatting checks in one step.
+</Tip>
+
+## Pre-commit hooks
+
+The project uses [Husky](https://typicode.github.io/husky/) for Git pre-commit hooks. These hooks run automatically when you commit and enforce code quality standards before changes are recorded.
+
+## Commit guidelines
+
+This project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+### Commit message format
+
+- Messages **must** include a type prefix as described in Conventional Commits
+- Messages **must** be written in lowercase, except for proper nouns
+- Messages **must not** end with a period `.`
+
+<CodeGroup>
+
+```text Good commit messages
+feat: add new component for download statistics
+fix: resolve navigation menu accessibility issue
+docs: update contributing guidelines
+```
+
+```text Bad commit messages
+update stuff
+Fixed bug.
+added new feature
+```
+
+</CodeGroup>
+
+### Commit signing
+
+Commits should be signed. See [GitHub's commit signing documentation](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits) for setup instructions.
+
+## JavaScript and TypeScript
+
+### Import standards
+
+- Do not import `React` directly — only import the specific modules you need
+- Use `import type` for type-only imports
+- Prefer named imports over default imports where possible
+
+Organize imports in this order:
+
+1. Node.js built-in modules
+2. External library imports (including `@node-core/*`)
+3. Relative imports (`./*`, `../*`, `#specifier/`)
+4. Type-only imports at the end of each given section
+
+```tsx
+import { readFile } from 'node:fs/promises';
+
+import { SomeComponent } from '@node-core/ui-components/Common/SomeComponent';
+import type { FC } from 'react';
+
+import { myHook } from '../hooks/myHook';
+import type { MyComponentProps } from './types';
+```
+
+### Component guidelines
+
+- Use the `FC` type from React for component definitions
+- Use `FC<PropsWithChildren<MyComponentProps>>` when the component accepts a `children` prop
+- Prefix prop type names with the component name (e.g. `MyComponentProps`)
+- Always use default exports for React components
+- Avoid direct DOM or Web API access in components — use hooks or utilities instead
+- CSS imports should always be the last import in the file
+
+### Example component structure
+
+```tsx
+import type { FC } from 'react';
+
+import styles from './index.module.css';
+
+type MyComponentProps = {
+  title: string;
+  isVisible?: boolean;
+};
+
+const MyComponent: FC<MyComponentProps> = ({ title, isVisible = true }) => {
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <div className={styles.myComponent}>
+      <h2 className={styles.componentTitle}>{title}</h2>
+    </div>
+  );
+};
+
+export default MyComponent;
+```
+
+## CSS guidelines
+
+The project uses [PostCSS](https://postcss.org/) and [Tailwind CSS](https://tailwindcss.com/). All component styles must be written in CSS Modules.
+
+- Use camelCase for CSS class names
+- Use Tailwind's `@apply` directive to apply utility classes
+- Define one Tailwind utility class per line for readability
+- Avoid plain CSS properties and inline styles in JavaScript
+- Write all styles inside CSS Modules — no inline styles
+
+```css
+.myComponent {
+  @apply flex
+    flex-col
+    items-center
+    justify-center
+    rounded-lg
+    bg-white
+    p-4
+    shadow-md;
+}
+
+.componentTitle {
+  @apply mb-4
+    text-2xl
+    font-bold
+    text-gray-900;
+}
+```
+
+## File naming conventions
+
+<AccordionGroup>
+  <Accordion title="Components">
+    - Component folders: `PascalCase`
+    - Component files: `index.tsx` (or `PascalCase.tsx` if no subdirectory is needed)
+    - Style files: `index.module.css`
+    - Test files: `__tests__/index.test.mjs`
+    - Story files: `index.stories.tsx`
+  </Accordion>
+
+  <Accordion title="General files">
+    - Use `kebab-case` for most file names (e.g. documentation and content files)
+    - Use `camelCase` for utility functions and configuration files
+    - Use `PascalCase` only for React components
+  </Accordion>
+</AccordionGroup>
+
+## Code organization
+
+- Keep related files together in component folders
+- Use index files for clean imports
+- Group similar functionality in dedicated directories
+- Follow the established patterns in the existing codebase
+
+## Documentation standards
+
+- Use JSDoc comments for complex functions and utilities
+- Document component props with TypeScript interfaces
+- Include Storybook stories for UI components
+- Keep README files updated when making significant changes
+
+## Performance guidelines
+
+- Import only what you need to minimize bundle size
+- Use dynamic imports for large components where appropriate
+- Optimize images and assets
+- Follow React best practices for rendering performance
+
+## IDE configuration
+
+The repository includes a `.vscode` directory with recommended settings. If you use VS Code, these settings are applied automatically.
+
+Recommended extensions:
+
+| Extension | Purpose |
+|---|---|
+| `esbenp.prettier-vscode` | Prettier formatting |
+| `bradlc.vscode-tailwindcss` | Tailwind CSS IntelliSense |
+| `stylelint.vscode-stylelint` | CSS linting |
+| `unifiedjs.vscode-mdx` | MDX file support |
+| `dbaeumer.vscode-eslint` | ESLint for JS/TS |
+| `editorconfig.editorconfig` | EditorConfig support |

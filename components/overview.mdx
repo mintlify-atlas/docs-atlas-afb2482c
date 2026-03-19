@@ -1,0 +1,89 @@
+---
+title: Components overview
+description: How the Node.js website organizes React components across two packages — a framework-agnostic UI library and a Next.js-specific site layer.
+---
+
+The Node.js website uses a **dual-package architecture** for React components. Understanding which package a component belongs in is the first decision you make when building new UI.
+
+## The two packages
+
+<CardGroup cols={2}>
+  <Card title="@node-core/ui-components" icon="package" href="/components/ui-components">
+    Reusable, framework-agnostic components published to npm. No Next.js dependencies. Includes Common, Containers, Icons, MDX utilities, and hooks.
+  </Card>
+  <Card title="apps/site/components" icon="layout" href="/components/site-components">
+    Next.js-specific components that wrap ui-components with routing, i18n, theming, and other framework features.
+  </Card>
+</CardGroup>
+
+## Choosing the right package
+
+Before creating a component, answer one question: **does it need Next.js APIs?**
+
+| Needs | Package |
+|---|---|
+| Routing (`usePathname`, `useRouter`) | `apps/site/components` |
+| Internationalization (`useTranslations`, `useLocale`) | `apps/site/components` |
+| Theming (`useTheme` from next-themes) | `apps/site/components` |
+| Dynamic imports (`next/dynamic`) | `apps/site/components` |
+| Pure UI, no framework coupling | `@node-core/ui-components` |
+
+<Tip>
+  When in doubt, build the base component in `@node-core/ui-components` and write a thin wrapper in `apps/site/components` that injects the framework-specific behavior.
+</Tip>
+
+## The wrapper pattern
+
+Many site components exist solely to connect a base UI component to Next.js. The base component accepts plain props; the wrapper reads from Next.js hooks and passes them down.
+
+```tsx
+// Base component — @node-core/ui-components
+const BaseNavLink: FC<BaseLinkProps> = ({ href, isActive, children }) => (
+  <a href={href} className={`${styles.link} ${isActive ? styles.active : ''}`}>
+    {children}
+  </a>
+);
+
+// Wrapper — apps/site/components
+const NavLink: FC<NavLinkProps> = ({ href, children }) => {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
+  return (
+    <BaseNavLink href={href} isActive={isActive}>
+      {children}
+    </BaseNavLink>
+  );
+};
+```
+
+This pattern keeps the UI library free of Next.js and makes components testable in isolation (and in Storybook) without a Next.js runtime.
+
+## Explore the component system
+
+<CardGroup cols={2}>
+  <Card title="Creating components" icon="plus" href="/components/creating-components">
+    File structure, TypeScript templates, and naming conventions.
+  </Card>
+  <Card title="UI components" icon="box" href="/components/ui-components">
+    Everything in the @node-core/ui-components package.
+  </Card>
+  <Card title="Site components" icon="globe" href="/components/site-components">
+    The Next.js layer — withNavBar, withFooter, withSidebar, and more.
+  </Card>
+  <Card title="CSS Modules" icon="palette" href="/components/css-modules">
+    How component styles are scoped and structured.
+  </Card>
+  <Card title="Tailwind CSS" icon="wind" href="/components/tailwind">
+    Using @apply and Tailwind v4 utilities inside CSS Modules.
+  </Card>
+  <Card title="Unit tests" icon="flask" href="/components/unit-tests">
+    Testing components with Node.js built-in test runner.
+  </Card>
+  <Card title="Storybook" icon="book-open" href="/components/storybook">
+    Writing stories for @node-core/ui-components.
+  </Card>
+  <Card title="Visual regression" icon="eye" href="/components/visual-regression">
+    Automated screenshot testing with Chromatic.
+  </Card>
+</CardGroup>

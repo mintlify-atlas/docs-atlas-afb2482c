@@ -1,0 +1,117 @@
+---
+title: Repository Structure
+description: The nodejs.org monorepo layout — apps/site/, packages/ui-components/, packages/i18n/, packages/rehype-shiki/, and packages/remark-lint/.
+---
+
+The `nodejs/nodejs.org` repository is a pnpm monorepo. The primary application lives in `apps/site/`, while shared packages live under `packages/`.
+
+## Directory Tree
+
+```
+nodejs.org/
+├── apps/
+│   └── site/                    # Main website application
+│       ├── components/          # Website-specific React components
+│       ├── layouts/             # Page layout templates
+│       ├── pages/               # Content pages (Markdown/MDX)
+│       │   ├── en/              # English content (source of truth)
+│       │   │   ├── index.mdx    # Home page
+│       │   │   ├── learn/       # Learn section
+│       │   │   ├── blog/        # Blog posts
+│       │   │   ├── download/    # Download pages
+│       │   │   └── about/       # About pages
+│       │   └── {locale}/        # Translated content (same structure as en/)
+│       ├── public/              # Static assets
+│       │   └── static/          # Images, documents, etc.
+│       ├── hooks/               # React hooks
+│       ├── providers/           # React context providers
+│       ├── types/               # TypeScript type definitions
+│       ├── next-data/           # Build-time data fetching
+│       ├── scripts/             # Utility scripts
+│       ├── snippets/            # Code snippets for the download page
+│       └── tests/
+│           └── e2e/             # End-to-end Playwright tests
+└── packages/
+    ├── ui-components/           # Reusable UI component library
+    │   ├── styles/              # Global stylesheets
+    │   └── .storybook/          # Storybook configuration
+    ├── i18n/                    # Internationalization
+    │   ├── locales/             # Translation JSON files
+    │   └── config.json          # Locale configuration
+    ├── rehype-shiki/            # Shiki syntax highlighting Rehype plugin
+    └── remark-lint/             # Custom Remark lint rules
+```
+
+## apps/site/
+
+This is the Next.js application. It is the package named `@node-core/website` and requires Node.js `24.x`.
+
+### Key Subdirectories
+
+<AccordionGroup>
+  <Accordion title="components/">
+    Website-specific React components — navbar, footer, sidebar, blog post cards, download section, and more. Components that are generic and reusable belong in `packages/ui-components/` instead.
+  </Accordion>
+  <Accordion title="layouts/">
+    Page layout templates that wrap MDX content. Each layout provides a specific page shell (navigation, sidebar, metadata bar, footer). Content pages reference a layout by name in their frontmatter. See [Layouts](/architecture/layouts) for details.
+  </Accordion>
+  <Accordion title="pages/en/">
+    The English source content. All pages are authored here first. Translators then create parallel files in `pages/{locale}/`. The build system discovers pages in `en/` and generates localized routes for all enabled locales. See [Content Pages](/architecture/content-pages).
+  </Accordion>
+  <Accordion title="next-data/">
+    Build-time data fetching scripts (`next.data.mjs`). Responsible for:
+    - Fetching Node.js release data
+    - Generating blog post metadata and pagination
+    - Building RSS feeds
+    - Build-time search indexing
+  </Accordion>
+  <Accordion title="scripts/">
+    Utility scripts for tasks such as generating release blog posts (`scripts/release-post/`) and syncing Orama Cloud search (`scripts/orama-search/`).
+  </Accordion>
+  <Accordion title="tests/e2e/">
+    Playwright end-to-end tests. Run with `pnpm playwright`.
+  </Accordion>
+</AccordionGroup>
+
+## packages/ui-components/
+
+**npm package:** `@node-core/ui-components`
+
+The shared UI component library. Components here are consumed by `apps/site/` and can be developed and tested in isolation using Storybook (configured in `.storybook/`). Global stylesheets live in `styles/`.
+
+## packages/i18n/
+
+**npm package:** `@node-core/website-i18n`
+
+Internationalization support:
+
+- `locales/` — JSON translation files for each language (e.g., `en.json`, `es.json`)
+- `config.json` — Locale configuration array. Each entry defines `code`, `localName`, `name`, `langDir`, `dateFormat`, `hrefLang`, and `enabled` for a supported language
+
+Crowdin syncs translations into `locales/` via GitHub Actions. See [Translation Workflow](/architecture/translation-workflow).
+
+## packages/rehype-shiki/
+
+**npm package:** `@node-core/rehype-shiki`
+
+A custom Rehype plugin that integrates Shiki for build-time syntax highlighting. It processes code blocks in MDX/Markdown content and outputs pre-highlighted HTML. This package is consumed by `apps/site/` as a workspace dependency.
+
+## packages/remark-lint/
+
+**npm package:** `@node-core/remark-lint`
+
+Custom Remark lint rules for Markdown content quality. Applied during `pnpm lint:md`.
+
+## Configuration Files (apps/site/ root)
+
+| File | Purpose |
+|---|---|
+| `next.config.mjs` | Next.js configuration (images, rewrites, redirects, experimental flags) |
+| `next.constants.mjs` | Shared constants (URLs, environment variable flags) |
+| `next.dynamic.mjs` | Custom page discovery and localized path generation |
+| `next.data.mjs` | Build-time data fetching orchestration |
+| `next.rewrites.mjs` | URL rewrite and redirect rules |
+| `navigation.json` | Top navigation, side navigation, footer links, and social links |
+| `i18n.tsx` | `next-intl` plugin entry point |
+| `wrangler.jsonc` | Cloudflare Worker configuration |
+| `open-next.config.ts` | OpenNext Cloudflare adapter configuration |

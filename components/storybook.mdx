@@ -1,0 +1,186 @@
+---
+title: Storybook
+description: How to write Storybook stories for @node-core/ui-components, including file structure, story types, argTypes controls, and running the development server.
+---
+
+[Storybook](https://storybook.js.org) is used for developing and documenting components in `@node-core/ui-components`. Every component in that package should have a corresponding story file.
+
+<Note>
+  Storybook covers `@node-core/ui-components` only. Components in `apps/site/components` do not have story files.
+</Note>
+
+## Running Storybook
+
+```bash
+# Start the development server
+pnpm storybook
+```
+
+Storybook runs at `http://localhost:6006`.
+
+```bash
+# Build a static version
+pnpm storybook:build
+```
+
+## Story file location
+
+Story files live alongside the component they document:
+
+```
+Common/Button/
+├── index.tsx
+├── index.module.css
+└── index.stories.tsx   ← stories here
+```
+
+## Writing stories
+
+A complete story file for the `Button` component:
+
+```tsx
+// index.stories.tsx
+import type { Meta as MetaObj, StoryObj } from '@storybook/react';
+import Button from '@node-core/ui-components/Common/Button';
+
+type Story = StoryObj<typeof Button>;
+type Meta = MetaObj<typeof Button>;
+
+export const Primary: Story = {
+  args: {
+    variant: 'primary',
+    children: 'Primary Button',
+  },
+};
+
+export const Secondary: Story = {
+  args: {
+    variant: 'secondary',
+    children: 'Secondary Button',
+  },
+};
+
+export const Loading: Story = {
+  args: {
+    variant: 'primary',
+    children: 'Loading...',
+    disabled: true,
+  },
+};
+
+export default {
+  component: Button,
+  title: 'Common/Button',
+  argTypes: {
+    variant: {
+      control: 'select',
+      options: ['primary', 'secondary', 'danger'],
+    },
+    size: {
+      control: 'select',
+      options: ['small', 'medium', 'large'],
+    },
+  },
+} as Meta;
+```
+
+## Story anatomy
+
+<AccordionGroup>
+  <Accordion title="Imports">
+    Import `Meta` and `StoryObj` from `@storybook/react`, then import the component from its full package path.
+
+    ```tsx
+    import type { Meta as MetaObj, StoryObj } from '@storybook/react';
+    import Button from '@node-core/ui-components/Common/Button';
+    ```
+  </Accordion>
+
+  <Accordion title="Type aliases">
+    Create `Story` and `Meta` type aliases bound to the component. This gives you full TypeScript inference on `args` and `argTypes`.
+
+    ```tsx
+    type Story = StoryObj<typeof Button>;
+    type Meta = MetaObj<typeof Button>;
+    ```
+  </Accordion>
+
+  <Accordion title="Named story exports">
+    Each named export is a story. The export name becomes the story name in the Storybook UI (e.g., `Primary`, `Secondary`, `Loading`).
+
+    ```tsx
+    export const Primary: Story = {
+      args: {
+        variant: 'primary',
+        children: 'Primary Button',
+      },
+    };
+    ```
+  </Accordion>
+
+  <Accordion title="Default export (Meta)">
+    The default export defines metadata for all stories in the file: which component to render, how to group it in the sidebar (`title`), and which controls to expose (`argTypes`).
+
+    ```tsx
+    export default {
+      component: Button,
+      title: 'Common/Button',
+      argTypes: {
+        variant: { control: 'select', options: ['primary', 'secondary', 'danger'] },
+      },
+    } as Meta;
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## argTypes controls
+
+Use `argTypes` in the default export to configure the interactive controls panel:
+
+| Control type | Use for |
+|---|---|
+| `'select'` | Union string types with a fixed set of options |
+| `'boolean'` | Boolean props |
+| `'text'` | Free-form string props |
+| `'number'` | Numeric props |
+| `'color'` | Color string props |
+
+```tsx
+export default {
+  component: MyComponent,
+  title: 'Common/MyComponent',
+  argTypes: {
+    size: {
+      control: 'select',
+      options: ['small', 'medium', 'large'],
+    },
+    isLoading: {
+      control: 'boolean',
+    },
+    label: {
+      control: 'text',
+    },
+  },
+} as Meta;
+```
+
+## Title conventions
+
+The `title` field in the default export controls where the story appears in the Storybook sidebar. Follow the package's directory structure:
+
+| Component location | Story title |
+|---|---|
+| `src/Common/Button` | `'Common/Button'` |
+| `src/Containers/NavBar` | `'Containers/NavBar'` |
+| `src/Icons/Social/GitHub` | `'Icons/Social/GitHub'` |
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Visual regression" icon="eye" href="/components/visual-regression">
+    Chromatic runs against your Storybook stories to catch visual changes.
+  </Card>
+  <Card title="Unit tests" icon="flask" href="/components/unit-tests">
+    Complement Storybook with programmatic unit tests.
+  </Card>
+</CardGroup>

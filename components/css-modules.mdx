@@ -1,0 +1,161 @@
+---
+title: CSS Modules
+description: How component styles are written, scoped, and structured using CSS Modules and the @apply directive with Tailwind CSS utilities.
+---
+
+Every component in this project scopes its styles with [CSS Modules](https://github.com/css-modules/css-modules). Style files are co-located with the component and named `index.module.css`.
+
+## File naming
+
+Follow the component's directory structure:
+
+```
+MyComponent/
+├── index.tsx
+└── index.module.css   ← styles live here
+```
+
+## Importing in TSX
+
+```tsx
+import styles from './index.module.css';
+
+const MyComponent = () => (
+  <div className={styles.container}>
+    <h2 className={styles.title}>Hello</h2>
+  </div>
+);
+```
+
+CSS Modules automatically generates unique class names at build time, so `.container` in one component never collides with `.container` in another.
+
+## Writing styles
+
+Use the `@apply` directive to compose Tailwind utilities inside CSS Modules:
+
+```css
+/* index.module.css */
+.container {
+  @apply flex
+    flex-col
+    gap-4
+    rounded-lg
+    bg-white
+    p-6
+    shadow-sm;
+}
+
+.title {
+  @apply text-xl
+    font-semibold
+    text-gray-900;
+}
+
+.description {
+  @apply leading-relaxed
+    text-gray-600;
+}
+```
+
+## Style guidelines
+
+<AccordionGroup>
+  <Accordion title="Use camelCase for class names">
+    CSS Modules are accessed as JavaScript property lookups. Use camelCase so you can write `styles.myClassName` without bracket notation.
+
+    ```css
+    /* ✅ camelCase */
+    .cardTitle { ... }
+    .isActive { ... }
+
+    /* ❌ kebab-case requires bracket notation */
+    .card-title { ... }
+    ```
+  </Accordion>
+
+  <Accordion title="One Tailwind utility per line">
+    List each `@apply` utility on its own line. This makes diffs easier to read and utilities easier to reorder.
+
+    ```css
+    /* ✅ one per line */
+    .button {
+      @apply px-4
+        py-2
+        rounded
+        font-medium;
+    }
+
+    /* ❌ all on one line */
+    .button {
+      @apply px-4 py-2 rounded font-medium;
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Prefer @apply over plain CSS">
+    When a Tailwind utility covers what you need, use `@apply` rather than writing plain CSS. This keeps the design system consistent.
+
+    ```css
+    /* ✅ Tailwind utility */
+    .link {
+      @apply text-green-600
+        underline;
+    }
+
+    /* ❌ plain CSS for things Tailwind covers */
+    .link {
+      color: #16a34a;
+      text-decoration: underline;
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Keep styles scoped to the component">
+    Never write styles that target elements outside the component's root. Avoid global selectors inside module files.
+  </Accordion>
+</AccordionGroup>
+
+## Combining class names
+
+When a component needs conditional or variant classes, combine them with template literals or the `classnames` package (available as `classnames` in the monorepo):
+
+```tsx
+import cn from 'classnames';
+import styles from './index.module.css';
+
+const Card: FC<CardProps> = ({ variant = 'default' }) => (
+  <div className={cn(styles.card, styles[variant])}>
+    ...
+  </div>
+);
+```
+
+Or with template literals for simpler cases:
+
+```tsx
+<div className={`${styles.card} ${styles[variant]}`}>
+```
+
+## Linting
+
+CSS files are linted with Stylelint. Run the linter from the package root:
+
+```bash
+pnpm lint:css
+
+# Auto-fix where possible
+pnpm lint:css:fix
+```
+
+The project uses `stylelint-config-standard`, `stylelint-order`, and `stylelint-selector-bem-pattern`.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Tailwind CSS" icon="wind" href="/components/tailwind">
+    How Tailwind v4 is configured and how @apply works.
+  </Card>
+  <Card title="Responsive design" icon="monitor" href="/components/responsive-design">
+    Responsive breakpoints and mobile-first patterns.
+  </Card>
+</CardGroup>

@@ -1,0 +1,224 @@
+---
+title: Layouts
+description: The layouts system in apps/site/layouts/ — how content pages declare their layout in frontmatter, what each layout provides, and how to create a custom layout.
+---
+
+Layouts are React components that wrap MDX content and provide consistent page structure — navigation, sidebars, footers, and metadata bars. Every content page specifies its layout in frontmatter.
+
+## How Layouts Work
+
+A content file declares its layout in the YAML frontmatter:
+
+```md
+---
+title: My Page
+layout: learn
+---
+
+# My Page
+
+Content here...
+```
+
+At render time, the build system reads the `layout` field, looks it up in `apps/site/components/withLayout.tsx`, and wraps the compiled MDX content in the corresponding layout component.
+
+The TypeScript pattern for a layout is:
+
+```typescript
+import type { FC, PropsWithChildren } from 'react';
+
+const MyLayout: FC<PropsWithChildren> = ({ children }) => (
+  <>
+    <WithNavBar />
+    <main id="main" tabIndex={-1}>
+      {children}
+    </main>
+    <WithFooter />
+  </>
+);
+
+export default MyLayout;
+```
+
+## Available Layouts
+
+All layout files live in `apps/site/layouts/`.
+
+<AccordionGroup>
+  <Accordion title="about — About.tsx">
+    Used for pages in the About section. Provides:
+    - Top navigation bar
+    - Sidebar with `about` and `getInvolved` navigation keys
+    - Meta bar (reading time, authors, edit link)
+    - Breadcrumbs
+    - Footer
+
+    ```typescript
+    // About.tsx
+    const AboutLayout: FC<PropsWithChildren> = ({ children }) => (
+      <>
+        <WithNavBar />
+        <Article>
+          <WithSidebar navKeys={['about', 'getInvolved']} />
+          <div>
+            <main id="main" tabIndex={-1}>{children}</main>
+            <WithMetaBar />
+          </div>
+          <WithBreadcrumbs navKeys={['about', 'getInvolved']} />
+        </Article>
+        <WithFooter />
+      </>
+    );
+    ```
+  </Accordion>
+
+  <Accordion title="article-page — ArticlePage.tsx">
+    Standalone article pages. Provides:
+    - Top navigation bar
+    - Empty sidebar (no nav keys — no sidebar links shown)
+    - Meta bar
+    - Footer
+
+    Suitable for one-off content pages that don't belong to a section's sidebar.
+  </Accordion>
+
+  <Accordion title="base — Base.tsx">
+    The foundational layout that wraps all other layouts. Provides:
+    - `NavigationStateProvider` React context
+    - A `baseLayout` CSS class wrapper
+
+    This is applied at the app level, not declared in frontmatter.
+  </Accordion>
+
+  <Accordion title="blog — Blog.tsx">
+    Blog index and category listing pages. Provides:
+    - Top navigation bar
+    - Blog header with category label
+    - Blog category tabs (All, Announcements, Release, Vulnerability, Migrations, Events)
+    - Paginated post listing
+    - Footer
+
+    This layout does not accept or render `{children}` from MDX content — the blog listing is fully data-driven.
+  </Accordion>
+
+  <Accordion title="default — Default.tsx">
+    Generic layout for pages that don't fit a specific section. Provides:
+    - Top navigation bar
+    - Empty sidebar
+    - Footer
+
+    No meta bar, no breadcrumbs.
+  </Accordion>
+
+  <Accordion title="download — Download.tsx">
+    Download section pages. Provides:
+    - Top navigation bar
+    - Page title from frontmatter
+    - `WithDownloadSection` component pre-populated with live release data
+    - MDX content rendered inside the download section
+    - Footer
+
+    This is an `async` Server Component — it fetches release data at build time via `provideReleaseData()`.
+  </Accordion>
+
+  <Accordion title="download-archive — DownloadArchive.tsx">
+    Download archive listing. Used for the historical releases archive page.
+  </Accordion>
+
+  <Accordion title="glowing-backdrop — GlowingBackdrop.tsx">
+    A visual layout used for landing/feature pages that require the glowing backdrop visual treatment.
+  </Accordion>
+
+  <Accordion title="learn — Learn.tsx">
+    Learn section articles. Provides:
+    - Top navigation bar
+    - Sidebar with the `learn` navigation key (full Learn section outline)
+    - Sidebar cross-links (previous/next article navigation)
+    - Meta bar
+    - Breadcrumbs
+    - Footer
+
+    ```typescript
+    // Learn.tsx
+    const LearnLayout: FC<PropsWithChildren> = ({ children }) => (
+      <>
+        <WithNavBar />
+        <Article>
+          <WithSideBar navKeys={['learn']} />
+          <div>
+            <main id="main" tabIndex={-1}>
+              {children}
+              <WithSidebarCrossLinks navKey="learn" />
+            </main>
+            <WithMetaBar />
+          </div>
+          <WithBreadcrumbs navKeys={['learn']} />
+        </Article>
+        <WithFooter />
+      </>
+    );
+    ```
+  </Accordion>
+
+  <Accordion title="post — Post.tsx">
+    Individual blog posts. Provides:
+    - Top navigation bar
+    - Post title (from frontmatter)
+    - Author avatar group and names
+    - Blog preview card
+    - EOL alert (for vulnerability posts)
+    - MDX content
+    - Blog cross-links (previous/next post)
+    - Meta bar
+    - Footer
+  </Accordion>
+</AccordionGroup>
+
+## Creating a Custom Layout
+
+<Steps>
+  <Step title="Create the layout component">
+    Add a new `.tsx` file in `apps/site/layouts/`. Follow the `FC<PropsWithChildren>` pattern:
+
+    ```typescript
+    import WithFooter from '#site/components/withFooter';
+    import WithNavBar from '#site/components/withNavBar';
+    import type { FC, PropsWithChildren } from 'react';
+
+    const MyCustomLayout: FC<PropsWithChildren> = ({ children }) => (
+      <>
+        <WithNavBar />
+        <main id="main" tabIndex={-1}>
+          {children}
+        </main>
+        <WithFooter />
+      </>
+    );
+
+    export default MyCustomLayout;
+    ```
+  </Step>
+
+  <Step title="Register the layout">
+    Add the layout to the mapping in `apps/site/components/withLayout.tsx`.
+  </Step>
+
+  <Step title="Use in frontmatter">
+    Reference the layout name in any content page's frontmatter:
+
+    ```md
+    ---
+    title: My Page
+    layout: my-custom
+    ---
+    ```
+  </Step>
+
+  <Step title="Document the layout">
+    Add a note about the layout's purpose and usage to the relevant documentation.
+  </Step>
+</Steps>
+
+<Warning>
+  If you add a layout component to `apps/site/layouts/` but forget to register it in `withLayout.tsx`, pages that reference it will fail to render.
+</Warning>

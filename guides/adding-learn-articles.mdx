@@ -1,0 +1,192 @@
+---
+title: Adding Learn Articles
+description: How to add new articles to the Node.js Learn section, including directory structure, frontmatter, navigation updates, and translation keys.
+---
+
+The Learn section at `/learn` provides tutorials and guides organized into topic categories. Each category is a directory under `apps/site/pages/en/learn/`, and each article is a Markdown file inside that directory.
+
+## Existing categories
+
+The following nine categories already exist:
+
+<CardGroup cols={2}>
+  <Card title="getting-started" icon="rocket">
+    Introduction to Node.js, the V8 engine, npm, and first steps.
+  </Card>
+  <Card title="asynchronous-work" icon="arrows-rotate">
+    Event loop, callbacks, promises, async/await, and timers.
+  </Card>
+  <Card title="command-line" icon="terminal">
+    Running scripts, reading environment variables, CLI argument parsing.
+  </Card>
+  <Card title="http" icon="globe">
+    HTTP servers, making requests, working with fetch.
+  </Card>
+  <Card title="manipulating-files" icon="folder-open">
+    Reading and writing files, working with directories and paths.
+  </Card>
+  <Card title="modules" icon="cubes">
+    CommonJS, ES Modules, package.json, and the module system.
+  </Card>
+  <Card title="typescript" icon="code">
+    Using TypeScript with Node.js: setup, transpilation, type checking.
+  </Card>
+  <Card title="diagnostics" icon="stethoscope">
+    Debugging, profiling, memory analysis, and tracing.
+  </Card>
+  <Card title="test-runner" icon="flask">
+    The built-in `node:test` module and writing tests.
+  </Card>
+</CardGroup>
+
+## Directory structure
+
+```
+apps/site/pages/en/learn/
+├── getting-started/
+│   ├── introduction-to-nodejs.md
+│   └── ...
+├── asynchronous-work/
+│   └── ...
+└── <category-name>/
+    └── <article-name>.md
+```
+
+## Article frontmatter
+
+Every Learn article uses the `learn` layout and lists its authors as GitHub usernames:
+
+```markdown
+---
+title: Introduction to Node.js
+layout: learn
+authors: flaviocopes, potch, MylesBorins, RomainLanz, mcollina
+---
+
+# Introduction to Node.js
+
+Node.js is an open-source and cross-platform JavaScript runtime...
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `title` | Yes | The article title shown in the page and sidebar |
+| `layout` | Yes | Must be `learn` |
+| `authors` | Yes | Comma-separated list of GitHub usernames |
+| `description` | No | Optional meta description for SEO |
+| `canonical` | No | Original URL if the content is syndicated |
+
+## Adding a new article
+
+<Steps>
+  <Step title="Create the article file">
+    Create a new `.md` file under the appropriate category directory:
+
+    ```
+    apps/site/pages/en/learn/getting-started/my-new-article.md
+    ```
+
+    Use lowercase kebab-case for the filename. The filename becomes the URL path segment.
+  </Step>
+  <Step title="Add frontmatter and content">
+    ```markdown
+    ---
+    title: My New Article
+    layout: learn
+    authors: your-github-username
+    ---
+
+    # My New Article
+
+    Content goes here...
+    ```
+  </Step>
+  <Step title="Update navigation.json">
+    Add your article to the `sideNavigation.learn` array in `apps/site/navigation.json`.
+
+    Find the object for the relevant category and add an entry to its `items` map:
+
+    ```json
+    {
+      "sideNavigation": {
+        "learn": [
+          {
+            "label": "getting-started",
+            "items": {
+              "myNewArticle": {
+                "link": "/learn/getting-started/my-new-article",
+                "label": "components.navigation.learn.getting-started.my-new-article"
+              }
+            }
+          }
+        ]
+      }
+    }
+    ```
+
+    The `label` value is a translation key that maps to a human-readable string.
+  </Step>
+  <Step title="Add translation keys">
+    Open `packages/i18n/src/locales/en.json` and add the translation key referenced in `navigation.json`:
+
+    ```json
+    {
+      "components": {
+        "navigation": {
+          "learn": {
+            "getting-started": {
+              "my-new-article": "My New Article"
+            }
+          }
+        }
+      }
+    }
+    ```
+
+    The key path must exactly match the dot-separated path in the `label` field of the navigation entry.
+  </Step>
+  <Step title="Preview and validate">
+    Run `pnpm dev` and navigate to `/learn/getting-started/my-new-article` to confirm the article renders and appears in the sidebar.
+
+    Run `pnpm format` to apply consistent formatting before opening a pull request.
+  </Step>
+</Steps>
+
+## Adding a new category
+
+If your article doesn't fit an existing category, you can create a new one:
+
+1. Create a new directory under `apps/site/pages/en/learn/`, for example `apps/site/pages/en/learn/networking/`.
+2. Add articles inside that directory.
+3. In `navigation.json`, add a new object to the `sideNavigation.learn` array with a `label` and `items` map.
+4. Add the corresponding translation keys in `packages/i18n/src/locales/en.json`.
+
+<Note>
+  Non-translated articles automatically fall back to English content with localized navigation. You do not need to provide translations for every locale before merging.
+</Note>
+
+## Code blocks in Learn articles
+
+The site supports GitHub Flavored Markdown and renders consecutive code blocks as a tabbed interface. Use language identifiers on all fenced blocks:
+
+````markdown
+```cjs
+const http = require('node:http');
+```
+
+```mjs
+import http from 'node:http';
+```
+````
+
+You can also add an optional `displayName` to label the tab:
+
+````markdown
+```cjs displayName="CommonJS"
+const http = require('node:http');
+```
+
+```mjs displayName="ES Modules"
+import http from 'node:http';
+```
+````

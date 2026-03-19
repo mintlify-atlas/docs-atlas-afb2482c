@@ -1,0 +1,128 @@
+---
+title: Build Targets
+description: The three build targets for nodejs.org — pnpm build (Vercel/Next.js output), pnpm deploy (static export), and pnpm dev (development server).
+---
+
+The Node.js website supports three distinct build targets, each serving a different purpose. They are all defined as scripts in `apps/site/package.json`.
+
+## Overview
+
+| Command | Output | Use case |
+|---|---|---|
+| `pnpm build` | `.next/` — Next.js server output | Production deployment on Vercel |
+| `pnpm deploy` | `build/` — Static file export | Hosting without a Node.js server |
+| `pnpm dev` | Dev server on `localhost:3000` | Local development |
+
+## pnpm build
+
+The standard production build, used by Vercel on every deployment.
+
+```bash
+pnpm build
+```
+
+What it does:
+
+1. Runs `build:blog-data` pre-build script to generate blog metadata
+2. Runs `next build` via `cross-env NODE_NO_WARNINGS=1`
+3. Outputs to `.next/` (the default Next.js build directory)
+
+This build produces a Next.js server-rendered output that runs on Vercel's Node.js infrastructure. It supports:
+
+- URL rewrites and redirects (configured in `next.rewrites.mjs`)
+- Incremental Static Regeneration (ISR)
+- Next.js Image Optimization
+- Server-side rendering for dynamic routes
+
+## pnpm deploy
+
+The static export build. Used for hosting environments that do not have a Node.js server — specifically, the legacy Node.js website infrastructure on DigitalOcean.
+
+```bash
+pnpm deploy
+```
+
+What it does:
+
+1. Runs `build:blog-data` pre-deploy script
+2. Sets `NEXT_PUBLIC_STATIC_EXPORT=true` as an environment variable
+3. Runs `next build` with that flag active
+
+When `NEXT_PUBLIC_STATIC_EXPORT=true` is set, `next.config.mjs` applies these changes:
+
+```javascript
+// next.config.mjs (simplified)
+const nextConfig = {
+  // Output to "build" instead of ".next"
+  distDir: ENABLE_STATIC_EXPORT ? 'build' : undefined,
+  // Enable static export mode
+  output: ENABLE_STATIC_EXPORT ? 'export' : undefined,
+  // Rewrites and redirects are not supported in static export
+  rewrites: ENABLE_STATIC_EXPORT ? undefined : rewrites,
+  redirects: ENABLE_STATIC_EXPORT ? undefined : redirects,
+};
+```
+
+<Warning>
+  URL rewrites and redirects are disabled in the static export build. Features that depend on server-side routing are not available. This is why both build targets must be tested when making routing changes.
+</Warning>
+
+### Static Export Locale Flag
+
+An additional flag, `NEXT_PUBLIC_STATIC_EXPORT_LOCALE=true`, controls whether the static export generates pages for all locales or only for the default English locale:
+
+```javascript
+// next.constants.mjs
+export const ENABLE_STATIC_EXPORT_LOCALE =
+  process.env.NEXT_PUBLIC_STATIC_EXPORT_LOCALE === 'true';
+```
+
+This is used in CI to control the scope of the static build.
+
+## pnpm dev
+
+The local development server. Uses Next.js Turbopack for fast iteration.
+
+```bash
+pnpm dev
+```
+
+What it does:
+
+1. Runs `build:blog-data` pre-dev script to ensure blog metadata is current
+2. Starts `next dev` with Turbopack (`turbopackFileSystemCacheForDev: true`)
+3. Serves the site on `http://localhost:3000`
+
+<Note>
+  The `build:blog-data` script runs before `dev` starts. If you add new blog posts during a dev session, restart the server or run `pnpm build:blog-data` manually.
+</Note>
+
+## Cloudflare Build
+
+In addition to the three primary targets, there is a Cloudflare-specific build:
+
+```bash
+# Build for Cloudflare Workers
+pnpm cloudflare:build:worker
+
+# Preview locally with Wrangler
+pnpm cloudflare:preview
+
+# Deploy to Cloudflare
+pnpm cloudflare:deploy
+```
+
+See [Cloudflare Deployment](/architecture/cloudflare-deployment) for full details.
+
+## Blog Data Pre-build Step
+
+All three primary build commands (`build`, `deploy`, `dev`) first run the `build:blog-data` script:
+
+```bash
+# Defined in package.json
+"prebuild": "node --run build:blog-data",
+"predeploy": "node --run build:blog-data",
+"predev":    "node --run build:blog-data"
+```
+
+This script at `apps/site/scripts/blog-data/index.mjs` reads all blog post files, generates metadata (titles, dates, categories, slugs, reading times), and writes a JSON data file that the build system consumes. Without this step, the blog listing and pagination will be empty or stale.

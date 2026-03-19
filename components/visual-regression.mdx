@@ -1,0 +1,105 @@
+---
+title: Visual regression testing
+description: How Chromatic integrates with Storybook to automatically detect visual changes to @node-core/ui-components components.
+---
+
+The project uses [Chromatic](https://www.chromatic.com) for automated visual regression testing. Chromatic captures screenshots of every Storybook story and compares them against a baseline to detect unintended visual changes.
+
+## How it works
+
+<Steps>
+  <Step title="Storybook build">
+    Chromatic builds the Storybook for `@node-core/ui-components`. Every story becomes a test case.
+  </Step>
+  <Step title="Screenshot capture">
+    Chromatic renders each story in a cloud browser and takes a screenshot. It captures multiple viewport sizes and theme variants.
+  </Step>
+  <Step title="Comparison">
+    The new screenshots are compared pixel-by-pixel against the last accepted baseline. Changed pixels are highlighted in the diff view.
+  </Step>
+  <Step title="Review and approval">
+    If visual changes are detected, a reviewer must inspect the diff in the Chromatic UI and either accept (new baseline) or deny (flag as a bug) each change.
+  </Step>
+</Steps>
+
+## What triggers a visual test
+
+Chromatic runs automatically on pull requests via CI. A visual test is triggered whenever:
+
+- A component file in `@node-core/ui-components` is modified
+- A story file (`index.stories.tsx`) is added or updated
+- A CSS Module file (`index.module.css`) is changed
+- The Storybook configuration changes
+
+## Relationship to Storybook
+
+Chromatic uses the same stories you write for local development. No separate test files are needed — every `export const MyStory: Story = { ... }` automatically becomes a visual test.
+
+```tsx
+// index.stories.tsx — this story runs as a visual test in Chromatic
+export const Primary: Story = {
+  args: {
+    variant: 'primary',
+    children: 'Primary Button',
+  },
+};
+```
+
+This means that writing thorough stories (covering all meaningful variants and states) directly improves visual test coverage.
+
+## Reviewing changes
+
+When Chromatic detects visual diffs:
+
+1. The CI check on the pull request will show a link to the Chromatic build.
+2. Open the build to see side-by-side comparisons of changed stories.
+3. For each diff:
+   - **Accept** if the change is intentional (Chromatic updates the baseline).
+   - **Deny** if the change is a regression (the CI check remains failed).
+4. All diffs must be reviewed before the Chromatic check passes.
+
+<Warning>
+  Accepting a visual change updates the baseline for all future comparisons. Only accept changes you have deliberately reviewed.
+</Warning>
+
+## Approving baselines
+
+Baselines represent the last approved visual state of each story. When you make an intentional design change:
+
+1. Open the Chromatic build for your pull request.
+2. Review every affected story.
+3. Click **Accept** on each change, or use **Accept all** if every diff is intentional.
+4. The CI check updates to green.
+
+## Local Storybook build
+
+Before pushing, you can build Storybook locally to confirm your stories render correctly:
+
+```bash
+pnpm storybook:build
+```
+
+This catches build errors and lets you review the compiled output before Chromatic sees it. Storybook runs at `http://localhost:6006` in development mode:
+
+```bash
+pnpm storybook
+```
+
+## Adding new stories
+
+Every new component added to `@node-core/ui-components` must include story files. This ensures Chromatic captures a baseline on the first pull request that introduces the component.
+
+<Tip>
+  Cover all meaningful visual states in your stories: default, variants, loading, disabled, error. The more states you document, the more regressions Chromatic can catch automatically.
+</Tip>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Storybook" icon="book-open" href="/components/storybook">
+    How to write stories for @node-core/ui-components.
+  </Card>
+  <Card title="Unit tests" icon="flask" href="/components/unit-tests">
+    Complement visual tests with programmatic assertions.
+  </Card>
+</CardGroup>

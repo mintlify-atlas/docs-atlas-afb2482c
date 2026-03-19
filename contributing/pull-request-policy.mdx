@@ -1,0 +1,82 @@
+---
+title: "Pull request policy"
+description: "Rules and processes governing how pull requests are reviewed and merged into the Node.js website repository."
+---
+
+This policy governs how contributions are reviewed and merged. All contributors and collaborators must follow these rules.
+
+<Note>
+CI checks must be manually triggered by adding a `github_actions:pull-request` label to the pull request before it can be merged.
+</Note>
+
+## Before merging
+
+<AccordionGroup>
+  <Accordion title="Timing requirements">
+    Pull requests must meet the following timing requirements before they can be merged:
+
+    - **Minimum open time**: A pull request must be open for at least **48 hours**.
+    - **Weekend rule**: If the pull request was authored on a weekend, the minimum is **72 hours**.
+    - **No objections**: There must be no outstanding objections after the minimum time period has passed.
+    - **At least one approval**: Every pull request requires at least one approving review before it can be merged.
+  </Accordion>
+
+  <Accordion title="Exceptions for immediate merging">
+    Pull requests may be merged immediately — without waiting for the minimum open time — if they contain:
+
+    - Critical bug fixes
+    - Short errata such as typos introduced by a previous pull request
+    - Critical changes considered "showstoppers" for the website's functionality
+  </Accordion>
+
+  <Accordion title="Fast-tracking process">
+    A pull request can be "fast-tracked" (merged before the 48-hour minimum) if all of the following conditions are met:
+
+    1. A **"fast-track" label** is applied to the pull request.
+    2. The person requesting fast-tracking **leaves a comment** explaining the reason.
+    3. If the person requesting fast-tracking is also the PR author, the request must have **at least one 👍 reaction** from another collaborator.
+  </Accordion>
+
+  <Accordion title="Consensus and objections">
+    - If there are disagreements, collaborators should seek consensus before proceeding.
+    - Lack of consensus may require escalation to the Website Team Maintainers.
+    - **All objections must be addressed** before a pull request can be merged.
+    - Objections from TSC members or Core Collaborators are valid and must be resolved.
+  </Accordion>
+</AccordionGroup>
+
+## When merging
+
+<AccordionGroup>
+  <Accordion title="Required checks">
+    Before merging, verify that:
+
+    - All required **status checks have passed**.
+    - The `github_actions:pull-request` **CI label has been applied** to trigger CI runs.
+    - All **review discussions are resolved**.
+
+    <Note>
+    Avoid rebasing or updating pull requests unnecessarily. The repository uses [GitHub Merge Queues](https://github.blog/2023-07-12-github-merge-queue-is-generally-available/), which automatically rebases and runs CI checks against the latest merge commit.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Testing requirements">
+    - Pull requests that introduce new features or fix bugs **must include tests**.
+    - Contributors are responsible for **fixing any tests that fail** as a result of their changes.
+    - Tests must **adequately cover** the changes made.
+  </Accordion>
+</AccordionGroup>
+
+## Review requirements
+
+- All pull requests must be reviewed and accepted by a collaborator with sufficient expertise who can take full responsibility for the change.
+- Pull requests proposed by existing collaborators require **an additional collaborator** for sign-off.
+- If you are unsure about a change and cannot take full responsibility, defer to another collaborator.
+- In some cases it may be necessary to @-mention a qualified collaborator to request their review.
+
+## Issue management
+
+- Collaborators may close any issue or pull request they believe is not relevant to the future of the Node.js project.
+- When relevance is unclear, leave the issue open for several days to allow additional discussion.
+- Issues can always be re-opened if necessary.
+- If no input from collaborators or evidence of relevance emerges, issues may be closed.

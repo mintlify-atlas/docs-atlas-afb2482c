@@ -1,0 +1,173 @@
+---
+title: Tech Stack
+description: All libraries and frameworks used in the nodejs.org website — Next.js, React, MDX, Remark, Rehype, Tailwind, Radix UI, Shiki, next-intl, Storybook, and Playwright.
+---
+
+This page documents every major technology used in `apps/site/`, including the role each plays and the actual package versions declared in `package.json`.
+
+## Frontend Framework
+
+### Next.js
+
+**Package:** `next@16.1.7`
+
+Next.js is the full-stack framework that powers the site. It provides:
+
+- Static Site Generation (SSG) and Incremental Static Regeneration (ISR)
+- The catch-all `[...path].tsx` dynamic route handler
+- Image optimization via `next/image`
+- Build-time configuration via `next.config.mjs`
+
+**Why Next.js?** It is versatile, hackable, stable, and — critically — supports fully static export builds, a requirement from the Node.js Technical Steering Committee.
+
+<Note>
+  The site uses `output: 'export'` when `NEXT_PUBLIC_STATIC_EXPORT=true` is set, producing a self-contained `build/` directory with no server runtime requirement.
+</Note>
+
+### React
+
+**Package:** `react@19` (catalog), `react-dom@^19.2.4`
+
+React is the UI rendering engine. The site uses React 19 with the React Compiler (`babel-plugin-react-compiler`) enabled for automatic memoization.
+
+## Styling System
+
+### Tailwind CSS
+
+**Package:** `tailwindcss` (catalog), `@tailwindcss/postcss@~4.2.1`
+
+Tailwind is the utility-first CSS framework that provides the design system foundation. It integrates via the PostCSS plugin.
+
+### PostCSS
+
+Used for CSS preprocessing. Active plugins:
+
+| Plugin | Purpose |
+|---|---|
+| `@tailwindcss/postcss` | Enables Tailwind CSS integration |
+| `postcss-calc@~10.1.1` | Resolves `calc()` expressions at build time |
+
+### CSS Modules
+
+CSS Modules provide scoped, component-level styles. Layout-specific styles live in `apps/site/layouts/layouts.module.css`. This prevents class name collisions between components.
+
+## Content Management
+
+### MDX
+
+**Package:** `@mdx-js/mdx@^3.1.1`
+
+MDX extends Markdown with JSX support, allowing React components to be embedded directly in content pages. All content in `apps/site/pages/en/` is authored in Markdown or MDX.
+
+### Remark
+
+Remark is the Markdown processing ecosystem. Active plugins:
+
+| Plugin | Version | Purpose |
+|---|---|---|
+| `remark-gfm` | `~4.0.1` | GitHub Flavored Markdown (tables, strikethrough, task lists) |
+| `@vcarl/remark-headings` | `~0.1.0` | Generates heading metadata for table of contents |
+| `remark-reading-time` | `~2.0.2` | Calculates estimated reading time |
+
+### Rehype
+
+Rehype is the HTML processing ecosystem, applied after Remark. Active plugins:
+
+| Plugin | Version | Purpose |
+|---|---|---|
+| `rehype-autolink-headings` | `~7.1.0` | Adds anchor links to headings |
+| `rehype-slug` | `~6.0.0` | Generates `id` attributes on headings |
+
+## UI Components
+
+### Radix UI
+
+Radix UI provides accessible, unstyled component primitives. Active packages:
+
+| Package | Version | Purpose |
+|---|---|---|
+| `@radix-ui/react-tabs` | `^1.1.13` | Tabbed code block UI |
+| `@radix-ui/react-tooltip` | `^1.2.8` | Tooltips |
+| `@radix-ui/react-accessible-icon` | — | Accessible icon wrappers |
+| `@radix-ui/react-dropdown-menu` | — | Dropdown menus |
+| `@radix-ui/react-label` | — | Form labels |
+| `@radix-ui/react-select` | — | Select inputs |
+| `@radix-ui/react-avatar` | — | Avatar components |
+
+**Why Radix UI?** It takes a minimalistic, component-focused approach, includes WAI-ARIA compliance out of the box, and allows the team to focus on design without re-implementing accessibility semantics.
+
+### Heroicons
+
+**Package:** `@heroicons/react@~2.2.0`
+
+SVG icon library used across UI components.
+
+### Shiki
+
+**Package:** `shiki@^0.3.6` (via `@node-core/rehype-shiki` workspace package)
+
+Shiki provides syntax highlighting for all code blocks. It runs at build time and outputs pre-highlighted HTML, eliminating the need for client-side highlighting libraries. The workspace package `packages/rehype-shiki/` wraps Shiki as a Rehype plugin.
+
+## Internationalization
+
+### next-intl
+
+**Package:** `next-intl@~4.8.3`
+
+`next-intl` is the i18n library. It provides:
+
+- The `useTranslations()` hook for accessing translation messages in components
+- ICU Message Syntax support for pluralization, gender, and interpolation
+- Next.js middleware integration for locale detection
+
+The site uses a custom subfolder content structure rather than Next.js's built-in i18n routing. See [i18n Overview](/architecture/i18n-overview) for details.
+
+### gray-matter
+
+**Package:** `gray-matter@~4.0.3`
+
+Parses YAML frontmatter from Markdown files. Used by the build pipeline to extract `title`, `layout`, `description`, and other page metadata.
+
+## Search
+
+### Orama
+
+**Packages:** `@orama/core@^1.2.19`, `@orama/ui@^1.5.4`
+
+Orama Cloud provides the site-wide search functionality. Content is indexed and synced via `scripts/orama-search/sync-orama-cloud.mjs`.
+
+## Development Tools
+
+### Storybook
+
+Storybook is used for component development and visual testing in the `packages/ui-components/` workspace package. It provides component isolation and a visual development environment.
+
+### Chromatic
+
+Chromatic integrates with Storybook to run automated visual regression tests. It detects UI changes between pull requests.
+
+### Playwright
+
+**Package:** `@playwright/test@^1.58.1`
+
+Playwright handles end-to-end (E2E) testing. Tests live in `apps/site/tests/e2e/`. They validate critical user journeys and cross-browser compatibility.
+
+### Husky
+
+Husky manages Git hooks to enforce code quality checks before commits.
+
+### TypeScript
+
+**Package:** `typescript` (catalog)
+
+The entire site is written in TypeScript. Type checking runs in CI (`pnpm lint:types`). Production builds skip type checking (`typescript: { ignoreBuildErrors: true }`) since CI already guarantees correctness.
+
+## Package Manager
+
+### pnpm
+
+pnpm manages the monorepo workspace. Individual packages are published to the npm registry. The workspace uses a `catalog:` feature for shared dependency version pinning.
+
+<Note>
+  Vercel's custom install command is `pnpm install --prod --frozen-lockfile`. Because of this, build-time dependencies must be listed under `dependencies`, not `devDependencies`, in `apps/site/package.json`.
+</Note>

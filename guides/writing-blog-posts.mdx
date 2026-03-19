@@ -1,0 +1,141 @@
+---
+title: Writing Blog Posts
+description: How to create blog posts for the Node.js website, including frontmatter structure, post categories, and how to use the release post generator script.
+---
+
+The Node.js blog lives at `apps/site/pages/en/blog/` and is organized into categories as subdirectories. Each post is a Markdown file with YAML frontmatter that controls how it is rendered.
+
+## Blog post frontmatter
+
+Every blog post requires the following frontmatter fields:
+
+| Field | Description |
+|---|---|
+| `date` | ISO 8601 timestamp (e.g. `2025-05-06T14:31:35.851Z`) |
+| `category` | One of the category slugs listed below |
+| `title` | Title of the post |
+| `layout` | Must be `blog-post` |
+| `author` | Display name of the author or authors |
+
+An optional `slug` field can override the URL slug derived from the filename.
+
+```markdown
+---
+date: '2025-05-06T14:31:35.851Z'
+category: release
+title: Node.js 24.0.0 (Current)
+layout: blog-post
+author: Rafael Gonzaga
+---
+
+## 2025-05-06, Version 24.0.0 (Current), @RafaelGSS and @juanarbol
+
+We're excited to announce the release of Node.js 24!
+```
+
+For posts syndicated from an external source, add a `canonical` field pointing to the original URL.
+
+## File location
+
+Create new posts under the appropriate category subdirectory:
+
+```
+apps/site/pages/en/blog/
+├── announcements/   # Project announcements and milestones
+├── community/       # Community news and events
+├── events/          # Conference and event coverage
+├── feature/         # Deep-dives on new features
+├── migrations/      # Migration guides between versions
+├── module/          # Module ecosystem articles
+├── npm/             # npm-related news
+├── release/         # Version release posts
+├── uncategorized/   # Posts that don't fit elsewhere
+├── video/           # Video content announcements
+├── vulnerability/   # Security advisories
+├── weekly/          # Weekly update digests
+└── wg/              # Working group updates
+```
+
+The filename becomes the URL slug. For example, `apps/site/pages/en/blog/release/v24.0.0.md` is served at `/blog/release/v24.0.0`.
+
+## Blog categories
+
+<CardGroup cols={2}>
+  <Card title="release" icon="tag">
+    Official version release posts. These are typically generated with the release post script rather than written by hand.
+  </Card>
+  <Card title="vulnerability" icon="shield-exclamation">
+    Security advisories and CVE disclosures. Published when a security fix is shipped.
+  </Card>
+  <Card title="announcements" icon="megaphone">
+    Major project announcements: LTS schedule changes, new initiatives, organizational news.
+  </Card>
+  <Card title="feature" icon="sparkles">
+    In-depth articles about new or existing features in Node.js.
+  </Card>
+</CardGroup>
+
+## Generating release posts
+
+Release posts are generated automatically from changelog data, SHASUMs, and GitHub author information. Use the `scripts:release-post` command rather than writing them by hand.
+
+<Steps>
+  <Step title="Run the generator">
+    ```bash
+    pnpm scripts:release-post -- --version=vXX.X.X
+    ```
+
+    Replace `vXX.X.X` with the version to generate, for example `v24.0.0`.
+
+    The script fetches data from:
+    - `https://nodejs.org/dist/index.json` for release metadata
+    - The Node.js changelog on GitHub for release notes
+    - `https://nodejs.org/dist/vX.Y.Z/SHASUMS256.txt.asc` for the checksum table
+  </Step>
+  <Step title="Use --force to overwrite">
+    If a post already exists for that version, pass `--force` to overwrite it:
+
+    ```bash
+    pnpm scripts:release-post -- --version=vXX.X.X --force
+    ```
+  </Step>
+  <Step title="Review and edit the output">
+    The script writes the file to `apps/site/pages/en/blog/release/vX.Y.Z.md`. Open it and review the generated content before committing.
+  </Step>
+  <Step title="Preview locally">
+    Run `pnpm dev` and navigate to `/blog/release/vX.Y.Z` to confirm the post renders correctly.
+  </Step>
+</Steps>
+
+<Note>
+  The script requires internet access to fetch changelog and dist data. It will exit with an error if those resources are unavailable.
+</Note>
+
+## Writing vulnerability advisories
+
+Security advisory posts go in `apps/site/pages/en/blog/vulnerability/`. Use category `vulnerability` in the frontmatter. The `slug` field is recommended so the URL is human-readable rather than derived from the filename:
+
+```markdown
+---
+date: 2026-01-13T17:00:00.000Z
+category: vulnerability
+title: January 2026 Security Releases
+slug: january-2026-security-releases
+layout: blog-post
+author: Rafael Gonzaga
+---
+```
+
+<Warning>
+  Security advisories should only be published after the fix is publicly available. Coordinate with the Node.js security team before opening a pull request.
+</Warning>
+
+## Validation checklist
+
+Before submitting a blog post PR:
+
+- Run `pnpm dev` and confirm the post renders at the correct URL
+- Run `pnpm format` to apply consistent formatting
+- Verify all internal links resolve correctly
+- Confirm the `date` field is in ISO 8601 format
+- Confirm the `category` matches one of the existing subdirectory names

@@ -1,0 +1,84 @@
+---
+title: Architecture Overview
+description: High-level overview of the nodejs.org website architecture, key design decisions, and how the system fits together.
+---
+
+The Node.js website is a Next.js application built as a monorepo. It is designed to support static builds, multiple deployment targets, a custom internationalization strategy, and a content pipeline powered by MDX.
+
+## System at a Glance
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| Framework | Next.js 16 + React 19 | SSG, routing, build optimization |
+| Content | MDX + Remark/Rehype | Markdown-with-JSX authoring pipeline |
+| Styling | Tailwind CSS + CSS Modules + PostCSS | Utility-first design + scoped components |
+| UI Primitives | Radix UI + Heroicons | Accessible, unstyled component base |
+| i18n | next-intl + Crowdin | Subfolder-per-locale translations |
+| Syntax Highlighting | Shiki | Build-time code block coloring |
+| Testing | Playwright + Storybook + Chromatic | E2E + visual regression |
+| Deployment | Vercel (primary) + Cloudflare (secondary) | CDN-backed global serving |
+
+## Key Design Decisions
+
+### Static Build Support
+
+The Node.js Technical Steering Committee requires the site to be fully statically exportable. Running `pnpm deploy` produces a standalone `build/` directory that can be served from any file server — no Node.js process needed at runtime. This ensures the site can be served even if cloud hosting providers change.
+
+### Custom Page Rendering
+
+Rather than relying on Next.js file-system routing directly, the site uses a `[...path].tsx` catch-all route paired with `next.dynamic.mjs` to:
+
+- Discover all Markdown/MDX source pages under `apps/site/pages/en/`
+- Generate localized paths for every supported locale
+- Serve English content as a fallback for untranslated pages (with localized navigation and UI)
+
+### Custom Internationalization
+
+The site does **not** use Next.js's built-in i18n routing. Instead, it uses a subfolder-per-locale content structure (`/pages/en/`, `/pages/fr/`, etc.) combined with `next-intl` for message formatting. This matches the previous site structure and gives more control over page listing and routing.
+
+### Layouts as Frontmatter
+
+Every content page declares its layout in YAML frontmatter. The layout system in `apps/site/layouts/` wraps MDX content with the appropriate navigation, sidebars, and metadata components. Adding a new layout means adding a file to that directory and registering it in `withLayout.tsx`.
+
+## Architecture Groups
+
+Explore each area of the architecture in detail:
+
+<CardGroup cols={2}>
+  <Card title="Tech Stack" href="/architecture/tech-stack">
+    All libraries and frameworks — Next.js, React, MDX, Tailwind, Radix UI, Shiki, next-intl, Storybook, Playwright.
+  </Card>
+  <Card title="Repository Structure" href="/architecture/repository-structure">
+    Monorepo layout: `apps/site/`, `packages/ui-components/`, `packages/i18n/`, `packages/rehype-shiki/`.
+  </Card>
+  <Card title="Content Pages" href="/architecture/content-pages">
+    How MDX pages work, frontmatter fields, and the custom rendering pipeline.
+  </Card>
+  <Card title="Adding Pages" href="/architecture/adding-pages">
+    Step-by-step guide to creating new content pages and updating navigation.
+  </Card>
+  <Card title="Layouts" href="/architecture/layouts">
+    Available layout templates and how to create a custom layout.
+  </Card>
+  <Card title="MDX Features" href="/architecture/mdx-features">
+    GFM, tabbed code blocks, React components in content, and Shiki syntax highlighting.
+  </Card>
+  <Card title="i18n Overview" href="/architecture/i18n-overview">
+    Why a custom i18n approach, next-intl, ICU Message Syntax, and locale routing.
+  </Card>
+  <Card title="Translation Workflow" href="/architecture/translation-workflow">
+    Crowdin sync, GitHub Actions automation, and which sections are translated.
+  </Card>
+  <Card title="Adding a Language" href="/architecture/adding-language">
+    How to request and configure a new locale in `i18n/config.json`.
+  </Card>
+  <Card title="Build Targets" href="/architecture/build-targets">
+    `pnpm build`, `pnpm deploy`, and `pnpm dev` — when to use each.
+  </Card>
+  <Card title="Vercel Deployment" href="/architecture/vercel-deployment">
+    Auto-deploy on push to `main`, branch previews, and dependency rules.
+  </Card>
+  <Card title="Cloudflare Deployment" href="/architecture/cloudflare-deployment">
+    OpenNext Cloudflare adapter, Wrangler configuration, R2 cache, and skew protection.
+  </Card>
+</CardGroup>

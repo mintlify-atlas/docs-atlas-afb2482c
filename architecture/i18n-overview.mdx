@@ -1,0 +1,136 @@
+---
+title: i18n Overview
+description: How internationalization works on nodejs.org — why Next.js built-in i18n is not used, the next-intl library, ICU Message Syntax, subfolder content structure, and locale detection.
+---
+
+The Node.js website serves content in multiple languages. The i18n system is built on `next-intl` and uses a custom subfolder-per-locale content structure rather than Next.js's built-in internationalization features.
+
+## Why Not Next.js Built-in i18n?
+
+Next.js offers a built-in i18n routing system, but the Node.js website does not use it. The reasons:
+
+1. **Content structure mismatch** — The site uses a subfolder per locale (`/pages/en/`, `/pages/fr/`) rather than file extensions (`file.en.md`). Next.js's built-in system doesn't support this model.
+2. **Page listing requirements** — The custom system needs to enumerate all pages per locale for static generation, which is not straightforward with the Next.js built-in approach.
+3. **Historical consistency** — The subfolder approach matches the structure of the previous Node.js website, aiding migration and long-term maintainability.
+4. **Long-term control** — A custom solution ensures the team is not dependent on the direction Next.js takes with its built-in i18n features.
+
+## next-intl
+
+**Package:** `next-intl@~4.8.3`
+
+`next-intl` is the i18n library. It is initialized via the `next-intl/plugin` in `next.config.mjs`:
+
+```javascript
+// next.config.mjs
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./i18n.tsx');
+export default withNextIntl(nextConfig);
+```
+
+In components, translation messages are accessed via the `useTranslations()` hook:
+
+```tsx
+import { useTranslations } from 'next-intl';
+
+const MyComponent = () => {
+  const t = useTranslations();
+
+  // Always use the full key path for static analysis compatibility
+  return <button>{t('components.common.myComponent.copyButton.title')}</button>;
+};
+```
+
+<Note>
+  Always call `useTranslations()` with no arguments and pass the full key path to `t()`. Do **not** call `useTranslations('some.prefix')` and then `t('suffix')` — the full path enables static analysis tools to validate that keys exist.
+</Note>
+
+## ICU Message Syntax
+
+Translation values follow the [ICU Message Syntax](https://next-intl.dev/docs/usage/messages), which supports:
+
+- **Simple strings**: `"Hello, world!"`
+- **Variable interpolation**: `"Hello, {name}!"`
+- **Pluralization**:
+  ```json
+  {
+    "items": "{count, plural, one {# item} other {# items}}"
+  }
+  ```
+- **Select** (gender, conditional text):
+  ```json
+  {
+    "gender": "{gender, select, male {He} female {She} other {They}} downloaded Node.js."
+  }
+  ```
+
+## Content Structure
+
+English source content lives in `apps/site/pages/en/`. Translated content lives in parallel subdirectories:
+
+```
+apps/site/pages/
+├── en/              # English (source of truth)
+│   ├── index.mdx
+│   ├── about/
+│   └── download/
+├── es/              # Spanish
+│   ├── index.mdx
+│   ├── about/
+│   └── download/
+└── fr/              # French
+    ├── index.mdx
+    └── about/
+```
+
+UI strings (navigation labels, button text, meta text) are stored separately in `packages/i18n/locales/{locale}.json`.
+
+## Locale Configuration
+
+Supported locales are declared in `packages/i18n/src/config.json`. Each entry is an object:
+
+```json
+{
+  "code": "en",
+  "localName": "English",
+  "name": "English",
+  "langDir": "ltr",
+  "dateFormat": "MM.DD.YYYY",
+  "hrefLang": "en-GB",
+  "enabled": true,
+  "default": true
+}
+```
+
+The `enabled` flag controls whether a locale is active. The `default: true` entry is English.
+
+## Locale Detection and Routing
+
+The middleware file `next.middleware.js` handles browser locale detection:
+
+1. The browser sends an `Accept-Language` header
+2. The middleware reads this header and finds the best matching locale from the enabled locales in `config.json`
+3. The user is redirected to the appropriate locale prefix (e.g., `/es/download`)
+4. If no match is found, the request falls back to `/en`
+
+## Fallback Behavior
+
+Not every page is translated into every language. For untranslated pages:
+
+- The English body content is served
+- Navigation, sidebar, and UI strings are shown in the user's locale
+- No additional configuration is needed — `next.dynamic.mjs` handles fallback path generation automatically
+
+This means a user browsing in French who visits a Learn page (which is not translated) will see English article content but French navigation and UI.
+
+## Translation Keys
+
+Translation keys for UI components follow a canonical path convention:
+
+- Keys are nested JSON matching the component file path
+- Prefix: component canonical path (e.g., `components.common.myComponent`)
+- Suffix: semantic description (e.g., `copyButton.title`)
+- Keys use camelCase only
+- New keys are added only to `packages/i18n/locales/en.json` — Crowdin syncs to other locales
+
+See [Translation Workflow](/architecture/translation-workflow) for how translations flow from contributors to production.

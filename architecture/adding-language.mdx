@@ -1,0 +1,114 @@
+---
+title: Adding a Language
+description: Step-by-step guide to adding a new locale to the nodejs.org website — opening a Crowdin discussion, waiting for project manager approval, and configuring the language in i18n/config.json.
+---
+
+Adding a new language to the Node.js website requires coordination with the Crowdin project manager and a configuration change in the repository.
+
+<Warning>
+  Do not add a new language to the repository without first going through the Crowdin process. The Crowdin project manager must set up the language on the Crowdin side before it can be enabled in the codebase.
+</Warning>
+
+## Process Overview
+
+<Steps>
+  <Step title="Open a discussion on Crowdin">
+    Go to the [Node.js Web Crowdin project](https://crowdin.com/project/nodejs-web) and open a new discussion requesting the addition of your language. Choose **New Topic** and select the target language from the dropdown.
+  </Step>
+  <Step title="Wait for the Crowdin manager">
+    A Crowdin project manager will review the request and add the language to the Crowdin project. This step must happen first — translation infrastructure needs to exist before the language is enabled in the codebase.
+  </Step>
+  <Step title="Add the language to i18n/config.json">
+    Once the language is available in Crowdin, a Node.js Website team member adds it to `packages/i18n/src/config.json`.
+  </Step>
+</Steps>
+
+## Configuring the Language
+
+Open `packages/i18n/src/config.json` and append a new object to the array:
+
+```json
+{
+  "code": "fr",
+  "localName": "Français",
+  "name": "French",
+  "langDir": "ltr",
+  "dateFormat": "DD.MM.YYYY",
+  "hrefLang": "fr",
+  "enabled": true,
+  "default": false
+}
+```
+
+### Field Reference
+
+| Field | Description | Example |
+|---|---|---|
+| `code` | Language code. Must match the folder name in `apps/site/pages/` | `fr` |
+| `localName` | Language name in its own language. Used in the language selector UI | `Français` |
+| `name` | Language name in English | `French` |
+| `langDir` | Text direction: `ltr` (left-to-right) or `rtl` (right-to-left) | `ltr` |
+| `dateFormat` | Date format string (moment.js format) | `DD.MM.YYYY` |
+| `hrefLang` | ISO 639-1 language code used in `<link hreflang>` tags | `fr` |
+| `enabled` | Whether this locale is active. Set to `false` to disable without removing | `true` |
+| `default` | Whether this is the default locale. Only `en` should be `true` | `false` |
+
+### Real Examples from config.json
+
+<Tabs>
+  <Tab title="English (default)">
+    ```json
+    {
+      "code": "en",
+      "localName": "English",
+      "name": "English",
+      "langDir": "ltr",
+      "dateFormat": "MM.DD.YYYY",
+      "hrefLang": "en-GB",
+      "enabled": true,
+      "default": true
+    }
+    ```
+  </Tab>
+  <Tab title="Spanish">
+    ```json
+    {
+      "code": "es",
+      "localName": "Español",
+      "name": "Spanish",
+      "langDir": "ltr",
+      "dateFormat": "DD.MM.YYYY",
+      "hrefLang": "es-ES",
+      "enabled": true,
+      "default": false
+    }
+    ```
+  </Tab>
+  <Tab title="Arabic (RTL, disabled)">
+    ```json
+    {
+      "code": "ar",
+      "localName": "العربية",
+      "name": "Arabic",
+      "langDir": "rtl",
+      "dateFormat": "YYYY.MM.DD",
+      "hrefLang": "ar",
+      "enabled": false,
+      "default": false
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## After Adding the Language
+
+Once the configuration is merged:
+
+1. The language will appear in the site's language selector UI
+2. The build system will look for translated content in `apps/site/pages/{code}/`
+3. Pages without translations will automatically fall back to English content with the new locale's UI strings
+4. The Crowdin sync GitHub Actions workflow will start uploading source strings for the new locale
+
+<Note>
+  Setting `enabled: false` disables a language without removing its configuration. This is useful for languages that are in progress or temporarily unavailable.
+</Note>

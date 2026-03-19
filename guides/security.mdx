@@ -1,0 +1,77 @@
+---
+title: Security
+description: How to report security vulnerabilities in the Node.js website, the disclosure process, and website-specific security considerations.
+---
+
+This page covers security policy for the **nodejs.org website repository**. For vulnerabilities in the Node.js runtime itself, see the [Node.js security policy](https://github.com/nodejs/node/security/policy).
+
+## Reporting a vulnerability
+
+<Warning>
+  Do **not** open a public GitHub issue to report a security problem. Public disclosure before a fix is available puts all users at risk.
+</Warning>
+
+Report security issues **privately** using the GitHub Security Advisory workflow:
+
+1. Go to [Security → "Report a vulnerability"](https://github.com/nodejs/nodejs.org/security/advisories/new) on the nodejs.org repository.
+2. Fill in the advisory form with as much detail as possible: affected versions, reproduction steps, and potential impact.
+3. Submit the report. It is visible only to repository maintainers.
+
+The team aims to acknowledge reports within **7 business days**. If you do not receive an acknowledgement within that window, forward your report to [tsc@nodejs.org](mailto:tsc@nodejs.org).
+
+## Disclosure process
+
+<Steps>
+  <Step title="Private report">
+    Researcher submits a vulnerability via GitHub Security Advisory (private).
+  </Step>
+  <Step title="Acknowledgement">
+    The website team acknowledges the report within 7 business days and begins investigation.
+  </Step>
+  <Step title="Fix development">
+    A fix is developed in a private fork or security advisory branch.
+  </Step>
+  <Step title="Public disclosure">
+    Once a fix is available and deployed, the vulnerability is published as a GitHub Security Advisory and assigned a CVE when applicable.
+  </Step>
+  <Step title="Blog advisory (if warranted)">
+    For significant vulnerabilities, a notice may also be posted to the Node.js blog at [nodejs.org/blog/vulnerability/](https://nodejs.org/blog/vulnerability/).
+  </Step>
+</Steps>
+
+## Scope
+
+This security policy applies to the **nodejs.org website** — its codebase, build pipeline, and infrastructure. It does not cover:
+
+- Vulnerabilities in the **Node.js runtime** (report to [nodejs/node](https://github.com/nodejs/node/security/policy))
+- Vulnerabilities in **npm packages** (report to the respective package maintainer)
+- Content issues (broken links, outdated documentation) — these can be reported as regular GitHub issues
+
+## Dependency security
+
+Dependencies are managed with a strict pinning policy (see [Dependency Pinning](/guides/dependency-pinning)) to minimize supply-chain risk. Dependabot is configured to:
+
+- Send automated security alerts when dependencies receive CVE advisories
+- Open PRs to update vulnerable dependencies
+
+<Note>
+  Dependabot security PRs are reviewed and merged promptly. For critical vulnerabilities in direct dependencies, a fix may be expedited outside the normal review cycle.
+</Note>
+
+## Website-specific security considerations
+
+### Content Security Policy
+
+The site is deployed with a Content Security Policy (CSP) header that restricts which scripts, styles, and resources can be loaded. Changes to third-party integrations (analytics, fonts, external embeds) may require updating the CSP configuration.
+
+### Build pipeline
+
+The build pipeline runs on GitHub Actions with minimal permissions. Secrets are stored in GitHub Secrets and are not exposed in build logs. Dependencies are installed from the npm registry using a pinned lockfile (`pnpm-lock.yaml`) to ensure reproducible builds.
+
+### Static export
+
+The website supports a fully static export mode (`NEXT_PUBLIC_STATIC_EXPORT=true`). In static mode, there is no server-side code execution at request time, which reduces the attack surface for server-side vulnerabilities.
+
+### Reporting infrastructure issues
+
+For issues with the hosting infrastructure (Cloudflare, Vercel, etc.) that affect availability or data integrity, contact the Node.js Website Team directly or escalate to the TSC at [tsc@nodejs.org](mailto:tsc@nodejs.org).

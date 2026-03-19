@@ -1,0 +1,75 @@
+---
+title: "Introduction"
+description: "The official Node.js® website — built with Next.js, React, TypeScript, and MDX"
+---
+
+The [nodejs.org](https://nodejs.org) website is the primary online presence for the Node.js® JavaScript runtime. It is maintained by the [OpenJS Foundation](https://openjsf.org/) and an open community of contributors. This documentation covers contributing to, developing, and maintaining the website codebase.
+
+<Note>
+  This documentation is for contributors working on the **nodejs.org website codebase**. For Node.js API documentation, visit [nodejs.org/api](https://nodejs.org/api/).
+</Note>
+
+## What is this repository?
+
+The `nodejs/nodejs.org` repository contains the full source code for the Node.js website. It is built using:
+
+- **[Next.js](https://nextjs.org)** — React framework for static site generation and routing
+- **[MDX](https://mdxjs.com/)** — Markdown with JSX for rich content pages
+- **[Tailwind CSS](https://tailwindcss.com/)** — Utility-first CSS framework
+- **[TypeScript](https://www.typescriptlang.org/)** — Type-safe JavaScript throughout
+- **[next-intl](https://next-intl-docs.vercel.app/)** — Internationalization with 15+ languages
+
+## What the site serves
+
+<CardGroup cols={2}>
+  <Card title="Learn" icon="graduation-cap" href="https://nodejs.org/learn">
+    Tutorials and guides for using Node.js, from beginner topics to advanced concepts like async programming, diagnostics, and TypeScript.
+  </Card>
+  <Card title="Download" icon="download" href="https://nodejs.org/download">
+    Official Node.js binaries for all platforms, with release schedules and package manager installation instructions.
+  </Card>
+  <Card title="Blog" icon="newspaper" href="https://nodejs.org/blog">
+    Official release announcements, security advisories, and project news from the Node.js team.
+  </Card>
+  <Card title="About" icon="circle-info" href="https://nodejs.org/about">
+    Node.js governance, partners, security reporting, branding, and end-of-life information.
+  </Card>
+</CardGroup>
+
+## Repository structure
+
+The repository uses a **pnpm workspace** with two main areas:
+
+| Path | Purpose |
+|------|---------|
+| `apps/site/` | Main Next.js website application |
+| `packages/ui-components/` | Published `@node-core/ui-components` npm package |
+| `packages/i18n/` | Translation configuration and locale files |
+| `packages/rehype-shiki/` | Custom syntax highlighting plugin |
+| `packages/remark-lint/` | Custom Markdown lint rules |
+
+## Who maintains it?
+
+The website is maintained by the **Node.js Website Team** — a group of collaborators with commit access. Contributions are accepted from anyone via pull requests.
+
+- **Infrastructure**: Hosted on [Vercel](https://vercel.com) (sponsored) and [Cloudflare](https://cloudflare.com)
+- **Translations**: Managed via [Crowdin](https://crowdin.com/project/nodejs-web)
+- **Search**: Powered by [Orama](https://docs.oramasearch.com/)
+- **Visual testing**: Automated via [Chromatic](https://www.chromatic.com/)
+
+## Getting help
+
+<CardGroup cols={2}>
+  <Card title="GitHub Discussions" icon="comments" href="https://github.com/nodejs/nodejs.org/discussions">
+    Ask questions and share ideas with the community.
+  </Card>
+  <Card title="GitHub Issues" icon="circle-exclamation" href="https://github.com/nodejs/nodejs.org/issues">
+    Report bugs or request features.
+  </Card>
+  <Card title="Discord" icon="discord" href="https://discord.gg/nodejs">
+    Chat with the Node.js community in real time.
+  </Card>
+  <Card title="Code of Conduct" icon="handshake" href="https://github.com/nodejs/admin/blob/main/CODE_OF_CONDUCT.md">
+    Our community standards and expectations.
+  </Card>
+</CardGroup>

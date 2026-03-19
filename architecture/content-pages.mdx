@@ -1,0 +1,119 @@
+---
+title: Content Pages
+description: How MDX content pages work in apps/site/pages/en/ — frontmatter fields, page discovery, localized path generation, and the custom rendering pipeline.
+---
+
+All website content is authored as Markdown (`.md`) or MDX (`.mdx`) files inside `apps/site/pages/en/`. English is the source of truth; translations are parallel files in `apps/site/pages/{locale}/`.
+
+## Page Discovery
+
+The site does not use Next.js file-system routing for content pages. Instead, a catch-all route (`pages/[...path].tsx`) handles every URL and delegates to the custom rendering system.
+
+### `next.dynamic.mjs`
+
+This file runs at build time and is responsible for:
+
+1. **Discovering** all source pages inside `apps/site/pages/en/`
+2. **Identifying** which pages have translations in each locale directory
+3. **Generating** localized paths for untranslated content (so `/fr/learn/...` resolves to English content with French navigation)
+4. **Creating fallback pages** — untranslated pages show English body content with translated menus and UI strings
+
+### `next.data.mjs`
+
+Runs at build time to generate supplementary data:
+
+- Node.js release data
+- Blog post metadata and pagination
+- RSS feed generation
+- Build-time search indexing
+
+## Frontmatter Fields
+
+Every content page begins with a YAML frontmatter block. The `gray-matter` package parses this at build time.
+
+```md
+---
+title: Page Title
+layout: layout-name
+description: Optional meta description for SEO
+authors: github-username, another-author
+canonical: https://original-source.example.com/article
+---
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `title` | Yes | Displayed in the browser tab and used for SEO `<title>` |
+| `layout` | Yes | The layout template to apply (see [Layouts](/architecture/layouts)) |
+| `description` | No | Meta description for SEO |
+| `authors` | No | Comma-separated GitHub usernames; used by the Learn layout's meta bar |
+| `canonical` | No | Original URL for syndicated content; added as `<link rel="canonical">` |
+
+## Content Directory Structure
+
+```
+apps/site/pages/
+├── en/                    # English source (always present)
+│   ├── index.mdx          # Home page
+│   ├── learn/             # Learn section articles
+│   │   └── {category}/
+│   │       └── {article}.md
+│   ├── blog/              # Blog posts
+│   ├── download/          # Download pages
+│   └── about/             # About section
+└── {locale}/              # Translated content
+    └── ...                # Same structure as en/
+```
+
+<Note>
+  The `en/` directory is the source of truth. Any file added to `en/` will automatically be discoverable by the build system on the next build.
+</Note>
+
+## Page Sections
+
+The site currently has five top-level sections:
+
+| Section | Path | Translated? |
+|---|---|---|
+| Home | `/` | Yes |
+| Learn | `/learn` | No (TSC decision) |
+| About | `/about` | Yes |
+| Download | `/download` | Yes |
+| Blog | `/blog` | No |
+
+See [Translation Workflow](/architecture/translation-workflow) for the reasoning behind which sections are translated.
+
+## Rendering Pipeline
+
+When a request arrives (or during static generation), the rendering pipeline processes a content file in this order:
+
+<Steps>
+  <Step title="Markdown file read">
+    The `.md` or `.mdx` source file is read from disk and frontmatter is extracted via `gray-matter`.
+  </Step>
+  <Step title="MDX compilation">
+    The file content is compiled by `@mdx-js/mdx` into a React component, with Remark and Rehype plugins applied.
+  </Step>
+  <Step title="Rehype/Remark plugins">
+    Plugins transform content: GFM parsing, heading metadata extraction, anchor link injection, slug generation, and Shiki syntax highlighting.
+  </Step>
+  <Step title="Layout application">
+    The compiled content component is wrapped by the layout named in the `layout` frontmatter field.
+  </Step>
+  <Step title="i18n integration">
+    The `next-intl` provider supplies translated UI strings for navigation, buttons, and metadata bar elements.
+  </Step>
+  <Step title="Static output">
+    The fully rendered page is written to the static output during `pnpm build` or `pnpm deploy`.
+  </Step>
+</Steps>
+
+## Asset Management
+
+Assets referenced from content pages should be stored in:
+
+| Asset type | Location |
+|---|---|
+| Images | `apps/site/public/static/images/` |
+| Documents | `apps/site/public/static/documents/` |
+| Icons | `@node-core/ui-components/Icons/` (via the UI package) |

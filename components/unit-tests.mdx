@@ -1,0 +1,165 @@
+---
+title: Unit tests
+description: How to write unit tests for React components using the Node.js built-in test runner and @testing-library/react.
+---
+
+Component unit tests use the **Node.js built-in test runner** (`node:test`) and `@testing-library/react`. No Jest or Vitest — the test runner ships with Node.js itself.
+
+## File location
+
+Tests live next to the component they cover, inside a `__tests__` directory:
+
+```
+MyComponent/
+├── index.tsx
+├── index.module.css
+└── __tests__/
+    └── index.test.mjs   ← tests here
+```
+
+<Note>
+  Test files use the `.mjs` extension and ES module syntax. This matches the `"type": "module"` setting across the packages.
+</Note>
+
+## Imports
+
+```javascript
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+import { render, screen, fireEvent } from '@testing-library/react';
+import Button from '../index.js';
+```
+
+| Import | Source |
+|---|---|
+| `assert` | Node.js built-in — strict assertion mode |
+| `describe`, `it` | Node.js built-in `node:test` |
+| `render`, `screen`, `fireEvent` | `@testing-library/react` |
+| Component under test | Relative path from `__tests__/` |
+
+## Writing a test
+
+```javascript
+// __tests__/index.test.mjs
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+import { render, screen, fireEvent } from '@testing-library/react';
+import Button from '../index.js';
+
+describe('Button Component', () => {
+  it('renders with correct text', () => {
+    render(<Button>Click me</Button>);
+    assert(screen.getByRole('button', { name: /click me/i }));
+  });
+
+  it('applies variant styles correctly', () => {
+    render(<Button variant="secondary">Test</Button>);
+    const button = screen.getByRole('button');
+    assert(button.getAttribute('class').includes('secondary'));
+  });
+});
+```
+
+## Running tests
+
+<Tabs>
+  <Tab title="Run once">
+    ```bash
+    pnpm test
+    ```
+  </Tab>
+  <Tab title="Unit tests only">
+    ```bash
+    pnpm test:unit
+    ```
+  </Tab>
+  <Tab title="Watch mode">
+    ```bash
+    pnpm test:unit:watch
+    ```
+  </Tab>
+</Tabs>
+
+The test command used under the hood:
+
+```bash
+cross-env NODE_NO_WARNINGS=1 node \
+  --experimental-test-coverage \
+  --test-coverage-exclude=**/*.test.* \
+  --enable-source-maps \
+  --import=global-jsdom/register \
+  --import=tsx \
+  --import=../../tests/setup.mjs \
+  --test **/*.test.*
+```
+
+- `--experimental-test-coverage` — generates coverage reports
+- `global-jsdom/register` — provides a browser-like DOM environment
+- `tsx` — enables TypeScript imports without pre-compilation
+- `tests/setup.mjs` — shared test setup (React, testing-library config)
+
+## What to test
+
+<AccordionGroup>
+  <Accordion title="Rendering">
+    Verify the component renders its content and key elements are accessible by role or text:
+
+    ```javascript
+    it('renders the title', () => {
+      render(<Card title="Hello" />);
+      assert(screen.getByText('Hello'));
+    });
+    ```
+  </Accordion>
+
+  <Accordion title="Props and variants">
+    Confirm that different prop values produce the expected output:
+
+    ```javascript
+    it('applies the highlighted variant class', () => {
+      render(<Card title="X" variant="highlighted" />);
+      const card = screen.getByRole('article');
+      assert(card.className.includes('highlighted'));
+    });
+    ```
+  </Accordion>
+
+  <Accordion title="User interactions">
+    Use `fireEvent` or `@testing-library/user-event` to simulate clicks and input:
+
+    ```javascript
+    it('calls onClick when clicked', () => {
+      let clicked = false;
+      render(<Button onClick={() => { clicked = true; }}>Go</Button>);
+      fireEvent.click(screen.getByRole('button'));
+      assert.equal(clicked, true);
+    });
+    ```
+  </Accordion>
+
+  <Accordion title="Conditional rendering">
+    Check that elements appear or are absent based on props:
+
+    ```javascript
+    it('does not render description when omitted', () => {
+      render(<MyComponent title="T" />);
+      assert.equal(screen.queryByText(/description/i), null);
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Coverage
+
+Coverage output is printed to the console after each run when using `--experimental-test-coverage`. Coverage for test files themselves is excluded via `--test-coverage-exclude=**/*.test.*`.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Storybook" icon="book-open" href="/components/storybook">
+    Visual component development and interactive stories.
+  </Card>
+  <Card title="Visual regression" icon="eye" href="/components/visual-regression">
+    Automated screenshot comparison with Chromatic.
+  </Card>
+</CardGroup>

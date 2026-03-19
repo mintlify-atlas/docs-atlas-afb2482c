@@ -1,0 +1,119 @@
+---
+title: "First contribution"
+description: "End-to-end walkthrough for making your first contribution to the Node.js website."
+---
+
+This guide walks you through the full process of contributing — from creating a branch to opening a pull request.
+
+<Note>
+Before starting, make sure you have completed [installation](/setup/installation) and can run the [development server](/setup/development-server) locally.
+</Note>
+
+<Steps>
+  <Step title="Sync your fork">
+    Always start from an up-to-date copy of the main branch:
+
+    ```bash
+    git fetch upstream
+    git merge upstream/main
+    ```
+  </Step>
+
+  <Step title="Create a new branch">
+    Create a branch with a descriptive name for your change:
+
+    ```bash
+    git checkout -b name-of-your-branch
+    ```
+
+    Use a name that reflects what you are changing, for example `fix/navigation-accessibility` or `feat/download-stats-component`.
+  </Step>
+
+  <Step title="Make your changes">
+    Make the changes you want to contribute. A few pointers:
+
+    - For repository structure guidance, refer to the technologies documentation.
+    - For adding new pages, follow the adding pages guide.
+    - For building UI components, follow the creating components guide.
+
+    Run the development server while you work to preview changes in real time:
+
+    ```bash
+    pnpm dev
+    ```
+  </Step>
+
+  <Step title="Format and lint your code">
+    Before committing, run the formatter and linter to ensure your code meets the project's standards:
+
+    ```bash
+    pnpm format
+    ```
+
+    This single command runs Prettier, ESLint fixes, and all other formatting checks across the entire codebase.
+
+    <Tip>
+    You can also run individual checks:
+    - `pnpm lint` — check for linting errors without fixing
+    - `pnpm lint:fix` — attempt to automatically fix linting errors
+    - `pnpm prettier` — check formatting only
+    - `pnpm prettier:fix` — fix formatting issues
+    </Tip>
+  </Step>
+
+  <Step title="Run the tests">
+    Run the test suite to make sure your changes do not break anything:
+
+    ```bash
+    pnpm test
+    ```
+
+    If you are adding a new feature or fixing a bug, include tests for your changes. Contributors are responsible for fixing any tests that fail.
+  </Step>
+
+  <Step title="Commit your changes">
+    Stage and commit your changes. This project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+    ```bash
+    git add .
+    git commit -m "feat: add new component for download statistics"
+    ```
+
+    Commit message rules:
+    - Must include a type prefix (e.g. `feat:`, `fix:`, `docs:`, `chore:`)
+    - Must be written in lowercase, except for proper nouns
+    - Must not end with a period `.`
+
+    <Warning>
+    Commits should be signed. See [GitHub's commit signing documentation](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits) for setup instructions.
+    </Warning>
+  </Step>
+
+  <Step title="Push your branch">
+    Push your branch to your fork:
+
+    ```bash
+    git push -u origin name-of-your-branch
+    ```
+  </Step>
+
+  <Step title="Open a pull request">
+    1. Go to your fork on GitHub.
+    2. Click **New Pull Request**.
+    3. Select your branch and compare it against `nodejs/nodejs.org`'s `main` branch.
+    4. Fill in the pull request description, explaining what changed and why.
+    5. Submit the pull request.
+
+    <Note>
+    Pull requests must remain open for at least 48 hours (72 hours if opened on a weekend) before they can be merged. See the [pull request policy](/contributing/pull-request-policy) for full details.
+    </Note>
+  </Step>
+</Steps>
+
+## Getting help
+
+If you get stuck at any point:
+
+- Open a [Discussion](https://github.com/nodejs/nodejs.org/discussions) to ask a question.
+- Check existing [Issues](https://github.com/nodejs/nodejs.org/issues) for known problems.
+- Review the [Code of Conduct](https://github.com/nodejs/node/blob/HEAD/CODE_OF_CONDUCT.md).

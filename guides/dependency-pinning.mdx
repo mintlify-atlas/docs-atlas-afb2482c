@@ -1,0 +1,124 @@
+---
+title: Dependency Pinning
+description: The Node.js website dependency pinning policy — when to pin exactly, when to use ranges, and how updates are managed via Dependabot.
+---
+
+The Node.js website uses a strict strategy for managing dependencies to prevent the build process or the website itself from breaking due to unexpected upstream changes. Some packages do not respect semantic versioning, making exact pinning an important safeguard.
+
+<Info>
+  This policy was established from [community discussion #5491](https://github.com/nodejs/nodejs.org/discussions/5491).
+</Info>
+
+## Dependency types
+
+Choose the correct dependency type based on how a package is used:
+
+| Type | When to use |
+|---|---|
+| `dependencies` | Used in the build process or runtime code, including bootstrap scripts and Git hooks (e.g. `husky`, `lint-staged`) |
+| `devDependencies` | Not invoked in production code: runtimes, tooling, type packages, dev-only utilities |
+| `devDependencies` (special case) | Used in code but only in development or test environments (e.g. `storybook`) |
+| `peerDependencies` | Runtime dependency that the website itself does not install (e.g. `react`, `react-dom`) |
+
+## Version range policy
+
+When adding a dependency, choose the appropriate version range operator:
+
+<AccordionGroup>
+  <Accordion title="Exact pin (no range operator)">
+    Use `--save-exact` for tooling and CLI dependencies where any version change could affect the developer experience or CI output:
+
+    - `husky`
+    - `prettier`
+    - `stylelint`
+    - `eslint`
+
+    ```json
+    {
+      "devDependencies": {
+        "prettier": "3.8.1"
+      }
+    }
+    ```
+  </Accordion>
+  <Accordion title="Patch range (~)">
+    Use `~` to allow patch updates only. Appropriate for:
+
+    - Development and testing environment packages (e.g. `storybook`)
+    - Node.js-only dependencies used in scripts or the build process but not in application code (e.g. `glob`, `@nodevu/core`)
+
+    ```json
+    {
+      "dependencies": {
+        "@nodevu/core": "~0.3.0"
+      }
+    }
+    ```
+  </Accordion>
+  <Accordion title="Minor range (^)">
+    Use `^` for website application dependencies where you want the latest features and bug fixes:
+
+    - `react`
+    - `next-intl`
+    - Other packages that are part of the website application itself
+
+    ```json
+    {
+      "dependencies": {
+        "next-intl": "~4.8.3",
+        "react": "catalog:"
+      }
+    }
+    ```
+
+    If you are not interested in picking up new features automatically, prefer `~` instead.
+  </Accordion>
+  <Accordion title="TypeScript type packages">
+    Type packages (e.g. `@types/node`, `@types/react`) should follow the same semver range as their corresponding runtime package.
+
+    The `@types/node` MAJOR version must stay in sync with the Node.js version the site is built with (currently Node.js 24.x):
+
+    ```json
+    {
+      "dependencies": {
+        "@types/node": "catalog:"
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## pnpm catalog
+
+Shared dependency versions are managed via the pnpm [catalog](https://pnpm.io/catalogs) feature. A `catalog:` specifier in `package.json` means the version is defined centrally in `pnpm-workspace.yaml` and shared across all workspace packages:
+
+```json
+{
+  "dependencies": {
+    "@types/node": "catalog:",
+    "classnames": "catalog:",
+    "typescript": "catalog:"
+  }
+}
+```
+
+Update the version in `pnpm-workspace.yaml` to change it for all packages at once.
+
+## Update process
+
+<Warning>
+  Manual dependency updates should be avoided. A pull request should not contain `package.json` or lockfile changes unless the update is explicitly required.
+</Warning>
+
+Dependabot is configured to send security alerts and automatic PRs for vulnerable dependencies. For non-security updates, the Dependabot configuration handles routine version bumps automatically.
+
+Manual updates are only appropriate when:
+
+1. A new version breaks the current semver constraint (e.g. a `^` dependency releases a new major).
+2. The team explicitly wants a new feature from an upstream package.
+
+The `.nvmrc` file and the `@types/node` version are exceptions — these should be updated together whenever the Node.js build version changes.
+
+## Adding new dependencies
+
+Before adding a new dependency, consider whether it is truly necessary. More dependencies increase review burden and supply-chain risk. Prefer using existing packages in the repository or Node.js built-in modules when possible.
