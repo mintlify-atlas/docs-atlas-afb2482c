@@ -48,7 +48,7 @@ describe('MyComponent', () => {
     render(<MyComponent title="Test Title" />);
 
     const heading = screen.getByRole('heading', { name: /test title/i });
-    assert(isVisible(heading));
+    assert(heading);
   });
 });
 ```

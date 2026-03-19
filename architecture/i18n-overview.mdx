@@ -106,7 +106,7 @@ The `enabled` flag controls whether a locale is active. The `default: true` entr
 
 ## Locale Detection and Routing
 
-The middleware file `next.middleware.js` handles browser locale detection:
+The middleware file `apps/site/middleware.ts` handles browser locale detection:
 
 1. The browser sends an `Accept-Language` header
 2. The middleware reads this header and finds the best matching locale from the enabled locales in `config.json`

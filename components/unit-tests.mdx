@@ -86,17 +86,19 @@ The test command used under the hood:
 cross-env NODE_NO_WARNINGS=1 node \
   --experimental-test-coverage \
   --test-coverage-exclude=**/*.test.* \
+  --experimental-test-module-mocks \
   --enable-source-maps \
   --import=global-jsdom/register \
   --import=tsx \
-  --import=../../tests/setup.mjs \
+  --import=tests/setup.jsx \
   --test **/*.test.*
 ```
 
 - `--experimental-test-coverage` — generates coverage reports
+- `--experimental-test-module-mocks` — enables module mocking (used to mock `next-intl`)
 - `global-jsdom/register` — provides a browser-like DOM environment
 - `tsx` — enables TypeScript imports without pre-compilation
-- `tests/setup.mjs` — shared test setup (React, testing-library config)
+- `tests/setup.jsx` — shared test setup (mocks `next-intl`, configures testing-library)
 
 ## What to test
 
