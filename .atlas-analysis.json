@@ -1,0 +1,163 @@
+{
+  "projectType": "frontend",
+  "projectName": "Node.js Website",
+  "projectDescription": "The official Node.js® website built with Next.js, React, TypeScript, and MDX — serving downloads, learning resources, blog posts, and documentation for the Node.js JavaScript runtime.",
+  "theme": "palm",
+  "primaryColor": "#aebd57",
+  "lightColor": "#26272c",
+  "darkColor": "#dbdbdd",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Getting Started",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Setup",
+            "pages": [
+              "setup/prerequisites",
+              "setup/installation",
+              "setup/development-server"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/first-contribution",
+              "contributing/code-style",
+              "contributing/pull-request-policy",
+              "contributing/becoming-a-collaborator"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Architecture",
+        "groups": [
+          {
+            "group": "Core Technologies",
+            "pages": [
+              "architecture/overview",
+              "architecture/tech-stack",
+              "architecture/repository-structure"
+            ]
+          },
+          {
+            "group": "Content System",
+            "pages": [
+              "architecture/content-pages",
+              "architecture/adding-pages",
+              "architecture/layouts",
+              "architecture/mdx-features"
+            ]
+          },
+          {
+            "group": "Internationalization",
+            "pages": [
+              "architecture/i18n-overview",
+              "architecture/translation-workflow",
+              "architecture/adding-language"
+            ]
+          },
+          {
+            "group": "Build & Deployment",
+            "pages": [
+              "architecture/build-targets",
+              "architecture/vercel-deployment",
+              "architecture/cloudflare-deployment"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Components",
+        "groups": [
+          {
+            "group": "Component System",
+            "pages": [
+              "components/overview",
+              "components/creating-components",
+              "components/ui-components",
+              "components/site-components"
+            ]
+          },
+          {
+            "group": "Styling",
+            "pages": [
+              "components/css-modules",
+              "components/tailwind",
+              "components/responsive-design"
+            ]
+          },
+          {
+            "group": "Testing",
+            "pages": [
+              "components/unit-tests",
+              "components/storybook",
+              "components/visual-regression"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Content Guides",
+            "pages": [
+              "guides/writing-blog-posts",
+              "guides/adding-learn-articles",
+              "guides/downloads-page"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "guides/cli-commands",
+              "guides/dependency-pinning",
+              "guides/writing-tests"
+            ]
+          },
+          {
+            "group": "Maintenance",
+            "pages": [
+              "guides/site-config",
+              "guides/package-publishing",
+              "guides/security"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Next.js-powered static site with incremental static regeneration",
+    "MDX content system for rich, interactive documentation pages",
+    "15+ language internationalization via Crowdin and next-intl",
+    "Dual-package component architecture: @node-core/ui-components + site-specific components",
+    "Tailwind CSS + CSS Modules hybrid styling system",
+    "Storybook integration for component development and visual regression testing",
+    "Custom page rendering system via dynamic [...path].tsx route",
+    "Vercel and Cloudflare multi-target build and deployment pipeline",
+    "Node.js release data integration and automated release blog post generation",
+    "Orama-powered full-text search across site content"
+  ],
+  "publicApiSurface": [
+    "@node-core/ui-components — published npm package of reusable React UI components",
+    "apps/site/pages/en/ — MDX/Markdown content pages (Learn, Blog, About, Download)",
+    "apps/site/navigation.json — site navigation configuration",
+    "apps/site/next-data/ — build-time data fetching for releases, blog, and RSS",
+    "apps/site/layouts/ — page layout templates mapped via withLayout.tsx",
+    "apps/site/components/ — Next.js-specific site components (NavBar, Footer, Sidebar, etc.)",
+    "packages/rehype-shiki — custom Rehype plugin for Shiki syntax highlighting",
+    "packages/remark-lint — custom Remark lint rules for content quality",
+    "apps/site/scripts/ — CLI utilities including release post generator",
+    "pnpm dev / pnpm build / pnpm deploy — development and build CLI commands"
+  ]
+}
